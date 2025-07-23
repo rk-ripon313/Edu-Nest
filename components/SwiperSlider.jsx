@@ -5,7 +5,7 @@ import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import { FreeMode, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import ItemCard from "./home/ItemCard";
+import ItemCard from "./ItemCard";
 
 const SwiperSlider = ({ items, type }) => {
   return (

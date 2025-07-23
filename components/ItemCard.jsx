@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"; // ShadCN badge
+import { Badge } from "@/components/ui/badge";
 import { ListOrdered, Star, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
