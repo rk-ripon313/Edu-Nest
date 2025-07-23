@@ -9,7 +9,7 @@ import { UserNav } from "./UserNav";
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "Courses", href: "/courses" },
+  { name: "Study-Series ", href: "/study-series " },
   { name: "Books", href: "/books" },
   { name: "Blogs", href: "/blogs" },
 ];
@@ -18,7 +18,7 @@ export default function MainNav() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-muted dark:bg-zinc-950 text-zinc-900 dark:text-white w-full">
+    <header className="sticky top-0 left-0 right-0 z-50 border-b bg-slate-300 dark:bg-zinc-950 text-zinc-900 dark:text-white w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Desktop View */}
         <div className="hidden lg:flex items-center justify-between">

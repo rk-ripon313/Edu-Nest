@@ -1,6 +1,10 @@
 import UserLayout from "@/components/layout/UserLayout";
 
 const MainLayout = ({ children }) => {
-  return <UserLayout>{children}</UserLayout>;
+  return (
+    <UserLayout>
+      <main>{children}</main>
+    </UserLayout>
+  );
 };
 export default MainLayout;

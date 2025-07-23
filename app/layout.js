@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { dbConnect } from "@/service/mongo";
 import { ThemeProvider } from "next-themes";
 import { Manrope, Sora, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
@@ -25,7 +26,8 @@ export const metadata = {
   description: "EduNest — Learn. Grow. Succeed.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  await dbConnect();
   return (
     <html
       lang="en"
