@@ -1,10 +1,10 @@
-import { getTopRatedBooks } from "@/database/queries/books-data";
+import { getBooksByType } from "@/database/queries/books-data";
 import { SectionHeader } from "../SectionHeader";
 import SectionWrapper from "../SectionWrapper";
 import SwiperSlider from "../SwiperSlider";
 
 const TopRatedBooks = async () => {
-  const books = await getTopRatedBooks();
+  const books = await getBooksByType("rating");
 
   return (
     <SectionWrapper>

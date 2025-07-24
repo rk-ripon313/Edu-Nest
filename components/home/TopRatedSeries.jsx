@@ -1,10 +1,10 @@
-import { getTopRatedStudySeries } from "@/database/queries/study-series-data";
+import { getStudySeriesByType } from "@/database/queries/study-series-data";
 import { SectionHeader } from "../SectionHeader";
 import SectionWrapper from "../SectionWrapper";
 import SwiperSlider from "../SwiperSlider";
 
 const TopRatedSeries = async () => {
-  const series = await getTopRatedStudySeries();
+  const series = await getStudySeriesByType("rating");
   return (
     <SectionWrapper even={true}>
       <SectionHeader

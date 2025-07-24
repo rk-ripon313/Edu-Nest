@@ -6,62 +6,38 @@ import { EnrollmentModel } from "@/models/enrollment-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 
-export const getPopularBooks = async (limit = 12) => {
-  const popularBooks = await EnrollmentModel.aggregate([
-    { $match: { status: "paid", onModel: "Book" } },
-    {
-      $group: {
-        _id: "$content",
-        enrollCount: { $sum: 1 },
+// type: "enroll" | "rating",
+export const getBooksByType = async (type, limit = 12) => {
+  let selectedBooks = [];
+
+  if (type === "enroll") {
+    selectedBooks = await EnrollmentModel.aggregate([
+      { $match: { status: "paid", onModel: "Book" } },
+      {
+        $group: {
+          _id: "$content",
+          enrollCount: { $sum: 1 },
+        },
       },
-    },
-    { $sort: { enrollCount: -1 } },
-    { $limit: limit },
-  ]);
-
-  // [{
-  //   _id: ObjectId("64aa001e9705487c69b2be03"), // book id
-  //   enrollCount: 1
-  // },]
-
-  const bookIds = popularBooks.map((b) => b._id);
-
-  const books = await BookModel.find({
-    _id: { $in: bookIds },
-    isPublished: true,
-  })
-    .select("title category thumbnail educator price ")
-    .populate({
-      path: "category",
-      model: CategoryModel,
-      select: "label group subject part",
-    })
-    .populate({
-      path: "educator",
-      model: UserModel,
-      select: "firstName lastName ",
-    })
-    .lean();
-
-  //  Other Importents data added by enrichBooks fun.
-  const enrichedBooks = await enrichItemsData(books, "Book");
-  return replaceMongoIdInArray(enrichedBooks);
-};
-
-export const getTopRatedBooks = async (limit = 12) => {
-  const topRatedBooks = await TestimonialModel.aggregate([
-    { $match: { onModel: "Book" } },
-    {
-      $group: {
-        _id: "$content",
-        avgRating: { $avg: "$rating" },
+      { $sort: { enrollCount: -1 } },
+      { $limit: limit },
+    ]);
+  } else {
+    selectedBooks = await TestimonialModel.aggregate([
+      { $match: { onModel: "Book" } },
+      {
+        $group: {
+          _id: "$content",
+          avgRating: { $avg: "$rating" },
+        },
       },
-    },
-    { $sort: { avgRating: -1 } },
-    { $limit: limit },
-  ]);
+      { $sort: { avgRating: -1 } },
+      { $limit: limit },
+    ]);
+  }
 
-  const bookIds = topRatedBooks.map((b) => b._id);
+  const bookIds = selectedBooks.map((b) => b._id);
+
   const books = await BookModel.find({
     _id: { $in: bookIds },
     isPublished: true,

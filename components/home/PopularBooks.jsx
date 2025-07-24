@@ -1,10 +1,10 @@
-import { getPopularBooks } from "@/database/queries/books-data";
+import { getBooksByType } from "@/database/queries/books-data";
 import { SectionHeader } from "../SectionHeader";
 import SectionWrapper from "../SectionWrapper";
 import SwiperSlider from "../SwiperSlider";
 
 const PopularBooks = async () => {
-  const books = await getPopularBooks();
+  const books = await getBooksByType("enroll");
 
   return (
     <SectionWrapper>

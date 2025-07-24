@@ -1,10 +1,10 @@
-import { getPopularStudySeries } from "@/database/queries/study-series-data";
+import { getStudySeriesByType } from "@/database/queries/study-series-data";
 import { SectionHeader } from "../SectionHeader";
 import SectionWrapper from "../SectionWrapper";
 import SwiperSlider from "../SwiperSlider";
 
 const PopularSeries = async () => {
-  const series = await getPopularStudySeries();
+  const series = await getStudySeriesByType("enroll");
   // console.log(series);
 
   return (
