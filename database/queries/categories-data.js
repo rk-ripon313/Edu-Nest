@@ -6,12 +6,14 @@ export const getUniqueCategories = async () => {
   const labelSet = new Set();
   const groupSet = new Set();
   const subSet = new Set();
+  const partSet = new Set();
 
   all.forEach((c) => {
     if (c.label) labelSet.add(c.label);
     if (c.group) groupSet.add(c.group);
     if (c.subject) subSet.add(c.subject);
+    if (c.part) subSet.add(c.part);
   });
 
-  return { labelSet, groupSet, subSet };
+  return { labelSet, groupSet, subSet, partSet };
 };

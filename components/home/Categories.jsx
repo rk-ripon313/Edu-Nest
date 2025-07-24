@@ -7,7 +7,8 @@ import { Button } from "../ui/button";
 
 const Categories = async ({}) => {
   const { labelSet, groupSet } = await getUniqueCategories();
-  const categories = [...labelSet, ...groupSet];
+  const labels = Array.from(labelSet);
+  const groups = Array.from(groupSet);
   return (
     <SectionWrapper even={true}>
       <div className="flex justify-between items-center gap-2">
@@ -27,13 +28,22 @@ const Categories = async ({}) => {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {categories.map((cat) => (
+        {labels.map((label) => (
           <Link
-            key={cat}
-            href={`/study-series?cat=${cat.toLowerCase()}`}
+            key={label}
+            href={`/study-series?label=${label.toLowerCase()}`}
             className="px-5 py-2 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition text-sm"
           >
-            {cat}
+            {label}
+          </Link>
+        ))}
+        {groups.map((group) => (
+          <Link
+            key={group}
+            href={`/study-series?group=${group.toLowerCase()}`}
+            className="px-5 py-2 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition text-sm"
+          >
+            {group}
           </Link>
         ))}
       </div>
