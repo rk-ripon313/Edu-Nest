@@ -12,7 +12,7 @@ export const getUniqueCategories = async () => {
     if (c.label) labelSet.add(c.label);
     if (c.group) groupSet.add(c.group);
     if (c.subject) subSet.add(c.subject);
-    if (c.part) subSet.add(c.part);
+    if (c.part) partSet.add(c.part);
   });
 
   return { labelSet, groupSet, subSet, partSet };

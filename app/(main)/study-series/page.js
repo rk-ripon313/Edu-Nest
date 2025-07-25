@@ -10,14 +10,14 @@ import SectionWrapper from "@/components/SectionWrapper";
 import SortDropdown from "@/components/SortDropdown";
 import TabListNav from "@/components/TabListNav";
 
-import { getAllBooks } from "@/database/queries/books-data";
 import { getUniqueCategories } from "@/database/queries/categories-data";
+import { getStudySeries } from "@/database/queries/study-series-data";
 
-const BooksPage = async ({ searchParams }) => {
+const StudySeriesPage = async ({ searchParams }) => {
   const currentPage = Number(searchParams.page) || 1;
   const itemsPerPage = 9;
 
-  const { allBooks, totalCount } = await getAllBooks({
+  const { allBooks, totalCount } = await getStudySeries({
     ...searchParams,
     page: currentPage,
     itemsPerPage,
@@ -33,8 +33,8 @@ const BooksPage = async ({ searchParams }) => {
       <SectionWrapper className="min-h-screen ">
         {/* Header */}
         <SectionHeader
-          title={"All Books "}
-          subtitle={"Choise books by your Demand"}
+          title={"All Study-Series "}
+          subtitle={"Choise Series by your Demand"}
         />
 
         {/* Mobile Layout */}
@@ -60,13 +60,13 @@ const BooksPage = async ({ searchParams }) => {
             {allBooks?.length > 0 ? (
               <div className="grid grid-cols-2  lg:grid-cols-3 gap-6">
                 {allBooks?.map((book) => (
-                  // {/* Book Cards */}
-                  <ItemCard key={book?.id} item={book} />
+                  // {/* series Cards */}
+                  <ItemCard key={book?.id} item={book} type={"series"} />
                 ))}
               </div>
             ) : (
               <Empty
-                title={"No books found"}
+                title={"No Series Found"}
                 subTitle={"Try adjusting your search or filters"}
               />
             )}
@@ -76,7 +76,7 @@ const BooksPage = async ({ searchParams }) => {
               currentPage={currentPage}
               totalCount={totalCount}
               itemsPerPage={itemsPerPage}
-              basePath="/books"
+              basePath="/study-series"
             />
           </div>
         </div>
@@ -85,4 +85,4 @@ const BooksPage = async ({ searchParams }) => {
   );
 };
 
-export default BooksPage;
+export default StudySeriesPage;

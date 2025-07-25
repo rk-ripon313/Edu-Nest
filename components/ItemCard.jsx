@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/formetData";
 import { ListOrdered, Star, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +13,7 @@ const ItemCard = ({ item, type }) => {
     category,
     educator,
     chapters = [],
+    createdAt,
     totalEnrollments = 0,
     averageRating = 0,
     totalRatings = 0,
@@ -96,13 +98,18 @@ const ItemCard = ({ item, type }) => {
 
         {/* Title */}
         <h3 className="text-base font-semibold line-clamp-2">
-          {title.length > 22 ? `${title.slice(0, 22)}...` : title}
+          {title?.length > 22 ? `${title.slice(0, 22)}...` : title}
         </h3>
 
-        {/* Educator */}
-        <span className="text-sm text-muted-foreground mb-3">
-          by {educator?.firstName} {educator?.lastName}
-        </span>
+        {/* Educator  and */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground mb-3">
+            by {educator?.firstName} {educator?.lastName}
+          </span>
+          {createdAt && (
+            <span className="text-xs ">📅 {formatDate(createdAt)}</span>
+          )}
+        </div>
 
         {/* Rating & Enrollment */}
         <div className="flex justify-between items-center mt-auto mb-3">

@@ -9,7 +9,7 @@ import { UserNav } from "./UserNav";
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "Study-Series ", href: "/study-series " },
+  { name: "Study-Series ", href: "/study-series" },
   { name: "Books", href: "/books" },
   { name: "Blogs", href: "/blogs" },
 ];
