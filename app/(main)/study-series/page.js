@@ -59,7 +59,7 @@ const StudySeriesPage = async ({ searchParams }) => {
           <div className="space-y-4">
             {allStudySeries?.length > 0 ? (
               <div className="grid grid-cols-2  lg:grid-cols-3 gap-6">
-                {allBooks?.map((book) => (
+                {allStudySeries?.map((book) => (
                   // {/* series Cards */}
                   <ItemCard key={book?.id} item={book} type={"series"} />
                 ))}
