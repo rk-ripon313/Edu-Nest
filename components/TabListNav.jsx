@@ -9,8 +9,8 @@ const TabListNav = () => {
   const searchParams = useSearchParams();
 
   const tabs = [
-    { label: "Books", href: "/books" },
     { label: "Study Series", href: "/study-series" },
+    { label: "Books", href: "/books" },
   ];
 
   const activeTab =

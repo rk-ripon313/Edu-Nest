@@ -30,10 +30,12 @@ export const getAllBooks = async ({
   }
 
   // Filter by price range
-  if (minPrice !== undefined && maxPrice !== undefined) {
+  const parsedMin = Number(minPrice);
+  const parsedMax = Number(maxPrice);
+  if (!isNaN(parsedMin) && !isNaN(parsedMax)) {
     filter.price = {
-      $gte: Number(minPrice),
-      $lte: Number(maxPrice),
+      $gte: parsedMin,
+      $lte: parsedMax,
     };
   }
 
