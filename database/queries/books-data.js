@@ -6,6 +6,7 @@ import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
+import { dbConnect } from "@/service/mongo";
 
 export const getAllBooks = async ({
   search,
@@ -48,91 +49,106 @@ export const getAllBooks = async ({
 
   const skip = (page - 1) * itemsPerPage;
 
-  const books = await BookModel.find(filter)
-    .select("title category thumbnail educator price createdAt updatedAt")
-    .populate({
-      path: "category",
-      model: CategoryModel,
-      match: categoryFilter,
-      select: "label group subject part",
-    })
-    .populate({
-      path: "educator",
-      model: UserModel,
-      select: "firstName lastName",
-    })
-    .skip(skip)
-    .limit(itemsPerPage)
-    .lean();
+  try {
+    dbConnect();
+    const books = await BookModel.find(filter)
+      .select("title category thumbnail educator price createdAt updatedAt")
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        match: categoryFilter,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName",
+      })
+      .skip(skip)
+      .limit(itemsPerPage)
+      .lean();
 
-  // Remove books where `category` was filtered out by `match`
-  const filteredBooks = books.filter((book) => book.category);
+    // Remove books where `category` was filtered out by `match`
+    const filteredBooks = books.filter((book) => book.category);
 
-  // Get total count for pagination (without skip & limit)
-  const totalCount = await BookModel.countDocuments(filter).exec();
+    // Get total count for pagination (without skip & limit)
+    const totalCount = await BookModel.countDocuments(filter).exec();
 
-  // Add rating + enroll info
-  const enrichedBooks = await enrichItemsData(filteredBooks, "Book");
+    // Add rating + enroll info
+    const enrichedBooks = await enrichItemsData(filteredBooks, "Book");
 
-  //  Sorting
-  const sortedBooks = sort ? applySort(enrichedBooks, sort) : enrichedBooks;
+    //  Sorting
+    const sortedBooks = sort ? applySort(enrichedBooks, sort) : enrichedBooks;
 
-  return {
-    allBooks: replaceMongoIdInArray(sortedBooks),
-    totalCount,
-  };
+    return {
+      allBooks: replaceMongoIdInArray(sortedBooks),
+      totalCount,
+    };
+  } catch (error) {
+    console.error("Error fetching study series:", error);
+    return {
+      allBooks: [],
+      totalCount: 0,
+    };
+  }
 };
 
 // type: "enroll" | "rating",
 export const getBooksByType = async (type, limit = 12) => {
-  let selectedBooks = [];
+  try {
+    dbConnect();
+    let selectedBooks = [];
 
-  if (type === "enroll") {
-    selectedBooks = await EnrollmentModel.aggregate([
-      { $match: { status: "paid", onModel: "Book" } },
-      {
-        $group: {
-          _id: "$content",
-          enrollCount: { $sum: 1 },
+    if (type === "enroll") {
+      selectedBooks = await EnrollmentModel.aggregate([
+        { $match: { status: "paid", onModel: "Book" } },
+        {
+          $group: {
+            _id: "$content",
+            enrollCount: { $sum: 1 },
+          },
         },
-      },
-      { $sort: { enrollCount: -1 } },
-      { $limit: limit },
-    ]);
-  } else {
-    selectedBooks = await TestimonialModel.aggregate([
-      { $match: { onModel: "Book" } },
-      {
-        $group: {
-          _id: "$content",
-          avgRating: { $avg: "$rating" },
+        { $sort: { enrollCount: -1 } },
+        { $limit: limit },
+      ]);
+    } else {
+      selectedBooks = await TestimonialModel.aggregate([
+        { $match: { onModel: "Book" } },
+        {
+          $group: {
+            _id: "$content",
+            avgRating: { $avg: "$rating" },
+          },
         },
-      },
-      { $sort: { avgRating: -1 } },
-      { $limit: limit },
-    ]);
+        { $sort: { avgRating: -1 } },
+        { $limit: limit },
+      ]);
+    }
+
+    const bookIds = selectedBooks.map((b) => b._id);
+
+    const books = await BookModel.find({
+      _id: { $in: bookIds },
+      isPublished: true,
+    })
+      .select("title category thumbnail educator price createdAt updatedAt")
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName ",
+      })
+      .lean();
+
+    //  Other Importents data added by enrichBooks fun.
+    const enrichedBooks = await enrichItemsData(books, "Book");
+    return replaceMongoIdInArray(enrichedBooks);
+  } catch (error) {
+    console.error("getStudySeriesByType error:", error);
+    return [];
   }
-
-  const bookIds = selectedBooks.map((b) => b._id);
-
-  const books = await BookModel.find({
-    _id: { $in: bookIds },
-    isPublished: true,
-  })
-    .select("title category thumbnail educator price createdAt updatedAt")
-    .populate({
-      path: "category",
-      model: CategoryModel,
-      select: "label group subject part",
-    })
-    .populate({
-      path: "educator",
-      model: UserModel,
-      select: "firstName lastName ",
-    })
-    .lean();
-
-  //  Other Importents data added by enrichBooks fun.
-  const enrichedBooks = await enrichItemsData(books, "Book");
-  return replaceMongoIdInArray(enrichedBooks);
 };

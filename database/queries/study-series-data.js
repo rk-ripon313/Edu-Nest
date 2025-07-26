@@ -5,6 +5,7 @@ import { EnrollmentModel } from "@/models/enrollment-model";
 import { StudySeriesModel } from "@/models/StudySeries -model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
+import { dbConnect } from "@/service/mongo";
 
 export const getStudySeries = async ({
   search,
@@ -48,94 +49,111 @@ export const getStudySeries = async ({
 
   const skip = (page - 1) * itemsPerPage;
 
-  const series = await StudySeriesModel.find(filter)
-    .select(
-      "title category thumbnail educator price chapters createdAt updatedAt"
-    )
-    .populate({
-      path: "category",
-      model: CategoryModel,
-      match: categoryFilter,
-      select: "label group subject part",
-    })
-    .populate({
-      path: "educator",
-      model: UserModel,
-      select: "firstName lastName",
-    })
-    .skip(skip)
-    .limit(itemsPerPage)
-    .lean();
+  try {
+    await dbConnect();
+    const series = await StudySeriesModel.find(filter)
+      .select(
+        "title category thumbnail educator price chapters createdAt updatedAt"
+      )
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        match: categoryFilter,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName",
+      })
+      .skip(skip)
+      .limit(itemsPerPage)
+      .lean();
 
-  // Remove books where `category` was filtered out by `match`
-  const filteredSeries = series.filter((book) => book.category);
+    // Remove books where `category` was filtered out by `match`
+    const filteredSeries = series.filter((book) => book.category);
 
-  // Get total count for pagination (without skip & limit)
-  const totalCount = await StudySeriesModel.countDocuments(filter).exec();
+    // Get total count for pagination (without skip & limit)
+    const totalCount = await StudySeriesModel.countDocuments(filter).exec();
 
-  // Add rating + enroll info
-  const enrichedSeries = await enrichItemsData(filteredSeries, "StudySeries");
+    // Add rating + enroll info
+    const enrichedSeries = await enrichItemsData(filteredSeries, "StudySeries");
 
-  //  Sorting
-  const sortedSeries = sort ? applySort(enrichedSeries, sort) : enrichedSeries;
+    //  Sorting
+    const sortedSeries = sort
+      ? applySort(enrichedSeries, sort)
+      : enrichedSeries;
 
-  return {
-    allBooks: replaceMongoIdInArray(sortedSeries),
-    totalCount,
-  };
+    return {
+      allStudySeries: replaceMongoIdInArray(sortedSeries),
+      totalCount,
+    };
+  } catch (error) {
+    console.error("Error fetching study series:", error);
+    return {
+      allStudySeries: [],
+      totalCount: 0,
+    };
+  }
 };
 
 // type: "enroll" | "rating",
 export const getStudySeriesByType = async (type, limit = 12) => {
-  let selectedSeries = [];
+  try {
+    await dbConnect();
+    let selectedSeries = [];
 
-  if (type === "enroll") {
-    selectedSeries = await EnrollmentModel.aggregate([
-      { $match: { status: "paid", onModel: "StudySeries" } },
-      {
-        $group: {
-          _id: "$content",
-          enrollCount: { $sum: 1 },
+    if (type === "enroll") {
+      selectedSeries = await EnrollmentModel.aggregate([
+        { $match: { status: "paid", onModel: "StudySeries" } },
+        {
+          $group: {
+            _id: "$content",
+            enrollCount: { $sum: 1 },
+          },
         },
-      },
-      { $sort: { enrollCount: -1 } },
-      { $limit: limit },
-    ]);
-  } else {
-    selectedSeries = await TestimonialModel.aggregate([
-      { $match: { onModel: "StudySeries" } },
-      {
-        $group: {
-          _id: "$content",
-          avgRating: { $avg: "$rating" },
+        { $sort: { enrollCount: -1 } },
+        { $limit: limit },
+      ]);
+    } else {
+      selectedSeries = await TestimonialModel.aggregate([
+        { $match: { onModel: "StudySeries" } },
+        {
+          $group: {
+            _id: "$content",
+            avgRating: { $avg: "$rating" },
+          },
         },
-      },
-      { $sort: { avgRating: -1 } },
-      { $limit: limit },
-    ]);
+        { $sort: { avgRating: -1 } },
+        { $limit: limit },
+      ]);
+    }
+
+    const seriesIds = selectedSeries.map((b) => b._id);
+
+    const series = await StudySeriesModel.find({
+      _id: { $in: seriesIds },
+      isPublished: true,
+    })
+      .select(
+        "title category thumbnail educator price chapters createdAt updatedAt"
+      )
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName",
+      })
+      .lean();
+
+    const enriched = await enrichItemsData(series, "StudySeries");
+    return replaceMongoIdInArray(enriched);
+  } catch (error) {
+    console.error("getStudySeriesByType error:", error);
+    return [];
   }
-
-  const seriesIds = selectedSeries.map((b) => b._id);
-
-  const series = await StudySeriesModel.find({
-    _id: { $in: seriesIds },
-    isPublished: true,
-  })
-    .select(
-      "title category thumbnail educator price chapters createdAt updatedAt"
-    )
-    .populate({
-      path: "category",
-      model: CategoryModel,
-      select: "label group subject part",
-    })
-    .populate({
-      path: "educator",
-      model: UserModel,
-      select: "firstName lastName",
-    })
-    .lean();
-
-  const enriched = await enrichItemsData(series, "StudySeries");
-  return replaceMongoIdInArray(enriched);
 };

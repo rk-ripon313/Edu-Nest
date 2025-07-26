@@ -17,7 +17,7 @@ const StudySeriesPage = async ({ searchParams }) => {
   const currentPage = Number(searchParams.page) || 1;
   const itemsPerPage = 9;
 
-  const { allBooks, totalCount } = await getStudySeries({
+  const { allStudySeries, totalCount } = await getStudySeries({
     ...searchParams,
     page: currentPage,
     itemsPerPage,
@@ -57,7 +57,7 @@ const StudySeriesPage = async ({ searchParams }) => {
 
           {/* Main Content */}
           <div className="space-y-4">
-            {allBooks?.length > 0 ? (
+            {allStudySeries?.length > 0 ? (
               <div className="grid grid-cols-2  lg:grid-cols-3 gap-6">
                 {allBooks?.map((book) => (
                   // {/* series Cards */}
