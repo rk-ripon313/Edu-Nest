@@ -10,7 +10,7 @@ import { Menu } from "lucide-react";
 import { useState } from "react";
 
 import Link from "next/link";
-import { ThemeToggle } from "./ThemeToggle";
+import ThemeToggle from "./ThemeToggle";
 
 const MobileNav = ({ links }) => {
   const [open, setOpen] = useState(false);
@@ -36,7 +36,7 @@ const MobileNav = ({ links }) => {
             <Link
               key={link.name}
               href={link.href}
-              onClick={() => setOpen(false)} // 👈 Close sheet on link click
+              onClick={() => setOpen(false)}
               className="block text-sm font-sora hover:text-primary"
             >
               {link.name}
