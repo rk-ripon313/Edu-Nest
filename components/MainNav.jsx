@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Logo } from "./Logo";
-import { MobileNav } from "./MobileNav";
-import { ThemeToggle } from "./ThemeToggle";
-import { UserNav } from "./UserNav";
+import Logo from "./Logo";
+import MobileNav from "./MobileNav";
+import ThemeToggle from "./ThemeToggle";
+import UserNav from "./UserNav";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -14,7 +14,7 @@ const navLinks = [
   { name: "Blogs", href: "/blogs" },
 ];
 
-export default function MainNav() {
+export const MainNav = () => {
   const pathname = usePathname();
 
   return (
@@ -57,4 +57,5 @@ export default function MainNav() {
       </div>
     </header>
   );
-}
+};
+export default MainNav;

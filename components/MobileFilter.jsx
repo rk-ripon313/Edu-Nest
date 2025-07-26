@@ -22,7 +22,7 @@ const MobileFilter = ({ categories }) => {
     <div className="md:hidden space-y-3 mb-4 ">
       <SearchBar />
 
-      <div className="flex justify-between items-center ">
+      <div className="flex justify-between items-center gap-2">
         <Sheet className="">
           <SheetTrigger>
             <Button

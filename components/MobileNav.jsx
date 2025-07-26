@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -8,15 +7,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { useState } from "react";
+
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 
-export function MobileNav({ links }) {
+const MobileNav = ({ links }) => {
+  const [open, setOpen] = useState(false);
   return (
-    <Sheet>
-      <SheetTrigger>
-        <Menu className="h-7 w-7" />
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="p-0">
+          <Menu className="h-7 w-7" />
+        </Button>
       </SheetTrigger>
+
       <SheetContent
         side="left"
         className="w-64 sm:w-80 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white backdrop-blur-sm"
@@ -31,6 +36,7 @@ export function MobileNav({ links }) {
             <Link
               key={link.name}
               href={link.href}
+              onClick={() => setOpen(false)} // 👈 Close sheet on link click
               className="block text-sm font-sora hover:text-primary"
             >
               {link.name}
@@ -38,12 +44,12 @@ export function MobileNav({ links }) {
           ))}
 
           <div className="pt-4 border-t flex gap-2">
-            <Link href="/login">
+            <Link href="/login" onClick={() => setOpen(false)}>
               <Button className="font-sora" variant="outline" size="sm">
                 Login
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href="/register" onClick={() => setOpen(false)}>
               <Button className="font-sora text-white bg-primary" size="sm">
                 Register
               </Button>
@@ -53,4 +59,5 @@ export function MobileNav({ links }) {
       </SheetContent>
     </Sheet>
   );
-}
+};
+export default MobileNav;

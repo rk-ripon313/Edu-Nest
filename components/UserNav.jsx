@@ -21,7 +21,7 @@ const user = {
   image: "/avatar.png",
 };
 
-export function UserNav() {
+const UserNav = () => {
   if (!user?.isLoggedIn) {
     return (
       <div className="md:flex gap-2">
@@ -69,4 +69,5 @@ export function UserNav() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+export default UserNav;

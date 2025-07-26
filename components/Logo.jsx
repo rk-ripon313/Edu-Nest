@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
-export const Logo = ({ className = "" }) => {
+const Logo = ({ className = "" }) => {
   return (
     <Link
       href="/"
@@ -18,3 +18,4 @@ export const Logo = ({ className = "" }) => {
     </Link>
   );
 };
+export default Logo;

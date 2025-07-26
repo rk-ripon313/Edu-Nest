@@ -58,7 +58,7 @@ const BooksPage = async ({ searchParams }) => {
           {/* Main Content */}
           <div className="space-y-4">
             {allBooks?.length > 0 ? (
-              <div className="grid grid-cols-2  lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-6">
                 {allBooks?.map((book) => (
                   // {/* Book Cards */}
                   <ItemCard key={book?.id} item={book} />

@@ -25,16 +25,16 @@ const SortDropdown = () => {
 
   return (
     <Select value={current} onValueChange={updateSort}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[160px] sm:w-[170px] md:w-[180px] lg:-w-[200px]">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectContent className="bg-muted dark:bg-slate-900">
-        <SelectItem value="latest">📅 Date: Latest</SelectItem>
-        <SelectItem value="oldest">📅 Date: Oldest</SelectItem>
-        <SelectItem value="price-low">💰 Price: Low to High</SelectItem>
-        <SelectItem value="price-high">💰 Price: High to Low</SelectItem>
+        <SelectItem value="latest">📅 Latest</SelectItem>
+        <SelectItem value="oldest">📅 Oldest</SelectItem>
+        <SelectItem value="price-low">💰 Low to High</SelectItem>
+        <SelectItem value="price-high">💰 High to Low</SelectItem>
         <SelectItem value="rating">⭐ Rating</SelectItem>
-        <SelectItem value="enrollment">👥 enrollment Count</SelectItem>
+        <SelectItem value="enrollment">👥 Enroll Count</SelectItem>
       </SelectContent>
     </Select>
   );
