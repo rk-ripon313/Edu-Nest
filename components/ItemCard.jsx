@@ -16,7 +16,7 @@ const ItemCard = ({ item, type }) => {
     createdAt,
     totalEnrollments = 0,
     averageRating = 0,
-    totalRatings = 0,
+    ratingCount = 0,
   } = item;
 
   const isSeries = type === "series";
@@ -117,7 +117,7 @@ const ItemCard = ({ item, type }) => {
             <Star className="w-4 h-4 fill-yellow-500" />
             <span>{averageRating.toFixed(1)}</span>
             <span className="text-xs text-muted-foreground">
-              ({totalRatings})
+              ({ratingCount})
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
