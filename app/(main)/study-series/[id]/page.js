@@ -10,7 +10,7 @@ const StudySeriesDetailsPage = async ({ params: { id } }) => {
   return (
     <>
       <ItemBreadcrumb subNav={"study-series"} title={series.title} />
-      <ItemDetails item={series} />
+      <ItemDetails item={series} series />
       <ReviewSection itemId={id} onModel={"StudySeries"} />
       <RelatedItems itemId={id} type="series" tags={series.tags} />
     </>
