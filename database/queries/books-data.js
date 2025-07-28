@@ -1,13 +1,18 @@
 import { applySort } from "@/lib/applySort";
-import { enrichItemsData } from "@/lib/enrich-item-data";
-import { replaceMongoIdInArray } from "@/lib/transformId";
+import { enrichItemDatabyId, enrichItemsData } from "@/lib/enrich-item-data";
+import {
+  replaceMongoIdInArray,
+  replaceMongoIdInObject,
+} from "@/lib/transformId";
 import { BookModel } from "@/models/book-model";
 import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
+import mongoose from "mongoose";
 
+//here is all books with all filter maping sort logic
 export const getAllBooks = async ({
   search,
   sort,
@@ -85,7 +90,7 @@ export const getAllBooks = async ({
       totalCount,
     };
   } catch (error) {
-    console.error("Error fetching study series:", error);
+    console.error("Error fetching Books:", error);
     return {
       allBooks: [],
       totalCount: 0,
@@ -93,7 +98,72 @@ export const getAllBooks = async ({
   }
 };
 
-// type: "enroll" | "rating",
+//here is a books dedails with all  populate data...
+export const getBookById = async (id) => {
+  if (!id) return {};
+
+  try {
+    await dbConnect();
+
+    const book = await BookModel.findById(id)
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName image userName",
+      })
+      .lean();
+
+    if (!book?.isPublished) return {};
+
+    const enrichedBook = await enrichItemDatabyId(book, "Book");
+
+    return replaceMongoIdInObject(enrichedBook);
+  } catch (error) {
+    console.error("Error fetching Book By Id:", error);
+    return {};
+  }
+};
+
+//get related books --
+
+export const getRelatedBooks = async (tags, currentId, limit = 12) => {
+  try {
+    await dbConnect();
+
+    const related = await BookModel.find({
+      _id: { $ne: new mongoose.Types.ObjectId(currentId) }, // exclude current book
+      tags: { $in: tags },
+      isPublished: true,
+    })
+      .select("title category thumbnail educator price createdAt updatedAt")
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName",
+      })
+      .limit(limit)
+      .lean();
+
+    //  Other Importents data added by enrichBooks fun.
+    const enrichedBooks = await enrichItemsData(related, "Book");
+    return replaceMongoIdInArray(enrichedBooks);
+  } catch (error) {
+    console.error("Error fetching related books:", error);
+    return [];
+  }
+};
+
+//for populer top-rated books type: "enroll" | "rating",
 export const getBooksByType = async (type, limit = 12) => {
   try {
     dbConnect();

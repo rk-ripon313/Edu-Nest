@@ -1,11 +1,15 @@
-import { enrichItemsData } from "@/lib/enrich-item-data";
-import { replaceMongoIdInArray } from "@/lib/transformId";
+import { enrichItemDatabyId, enrichItemsData } from "@/lib/enrich-item-data";
+import {
+  replaceMongoIdInArray,
+  replaceMongoIdInObject,
+} from "@/lib/transformId";
 import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { StudySeriesModel } from "@/models/StudySeries -model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
+import mongoose from "mongoose";
 
 export const getStudySeries = async ({
   search,
@@ -94,6 +98,71 @@ export const getStudySeries = async ({
       allStudySeries: [],
       totalCount: 0,
     };
+  }
+};
+
+//here is a series dedails with all  populate data...
+export const getStudySeriesById = async (id) => {
+  if (!id) return {};
+
+  try {
+    await dbConnect();
+
+    const series = await StudySeriesModel.findById(id)
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName image userName",
+      })
+      .lean();
+
+    if (!series?.isPublished) return {};
+
+    const enrichedSeries = await enrichItemDatabyId(series, "StudySeries");
+
+    return replaceMongoIdInObject(enrichedSeries);
+  } catch (error) {
+    console.error("Error fetching Series By Id:", error);
+    return {};
+  }
+};
+
+//get related series --
+
+export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
+  try {
+    await dbConnect();
+
+    const related = await StudySeriesModel.find({
+      _id: { $ne: new mongoose.Types.ObjectId(currentId) }, // exclude current seies
+      tags: { $in: tags },
+      isPublished: true,
+    })
+      .select("title category thumbnail educator price createdAt updatedAt")
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate({
+        path: "educator",
+        model: UserModel,
+        select: "firstName lastName",
+      })
+      .limit(limit)
+      .lean();
+
+    //  Other Importents data added by enrichBooks fun.
+    const enrichedSeries = await enrichItemsData(related, "Book");
+    return replaceMongoIdInArray(enrichedSeries);
+  } catch (error) {
+    console.error("Error fetching related Series:", error);
+    return [];
   }
 };
 
