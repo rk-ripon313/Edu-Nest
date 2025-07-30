@@ -5,6 +5,38 @@ import ReviewSection from "@/components/details/ReviewSection";
 import { getStudySeriesById } from "@/database/queries/study-series-data";
 import { notFound } from "next/navigation";
 
+export const generateMetadata = async ({ params: { id } }) => {
+  const series = await getStudySeriesById(id);
+
+  if (!series) {
+    return {
+      title: "Study Series Not Found | EduNest",
+      description: "No study series found with the provided ID.",
+    };
+  }
+
+  const coverImage = series?.thumbnail;
+
+  return {
+    title: `${series.title} | EduNest`,
+    description:
+      series.description?.slice(0, 160) ||
+      "Explore this study series on EduNest.",
+    openGraph: {
+      title: `${series.title} | EduNest`,
+      description: series.description,
+      images: [
+        {
+          url: coverImage,
+          width: 800,
+          height: 600,
+          alt: series.title,
+        },
+      ],
+    },
+  };
+};
+
 const StudySeriesDetailsPage = async ({ params: { id } }) => {
   const series = await getStudySeriesById(id);
   if (!series) notFound();
