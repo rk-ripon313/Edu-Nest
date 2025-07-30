@@ -31,7 +31,7 @@ const Categories = async ({}) => {
         {labels.map((label) => (
           <Link
             key={label}
-            href={`/study-series?label=${label.toLowerCase()}`}
+            href={`/study-series?label=${label}`}
             className="px-5 py-2 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition text-sm"
           >
             {label}
@@ -40,7 +40,7 @@ const Categories = async ({}) => {
         {groups.map((group) => (
           <Link
             key={group}
-            href={`/study-series?group=${group.toLowerCase()}`}
+            href={`/study-series?group=${group}`}
             className="px-5 py-2 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition text-sm"
           >
             {group}
