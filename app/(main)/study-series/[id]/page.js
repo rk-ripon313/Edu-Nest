@@ -3,10 +3,11 @@ import ItemDetails from "@/components/details/ItemDetails";
 import RelatedItems from "@/components/details/RelatedItems";
 import ReviewSection from "@/components/details/ReviewSection";
 import { getStudySeriesById } from "@/database/queries/study-series-data";
+import { notFound } from "next/navigation";
 
 const StudySeriesDetailsPage = async ({ params: { id } }) => {
   const series = await getStudySeriesById(id);
-
+  if (!series) notFound();
   return (
     <>
       <ItemBreadcrumb subNav={"study-series"} title={series.title} />

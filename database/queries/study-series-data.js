@@ -105,7 +105,7 @@ export const getStudySeries = async ({
 
 //here is a series dedails with all  populate data...
 export const getStudySeriesById = async (id) => {
-  if (!id) return {};
+  if (!id) return;
 
   try {
     await dbConnect();
@@ -144,7 +144,6 @@ export const getStudySeriesById = async (id) => {
     return replaceMongoIdInObject(enrichedSeries);
   } catch (error) {
     console.error("Error fetching Series By Id:", error);
-    return {};
   }
 };
 

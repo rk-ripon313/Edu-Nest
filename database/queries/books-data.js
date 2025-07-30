@@ -100,7 +100,7 @@ export const getAllBooks = async ({
 
 //here is a books dedails with all  populate data...
 export const getBookById = async (id) => {
-  if (!id) return {};
+  if (!id) return;
 
   try {
     await dbConnect();
@@ -125,7 +125,6 @@ export const getBookById = async (id) => {
     return replaceMongoIdInObject(enrichedBook);
   } catch (error) {
     console.error("Error fetching Book By Id:", error);
-    return {};
   }
 };
 
