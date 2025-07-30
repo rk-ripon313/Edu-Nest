@@ -1,0 +1,50 @@
+import { Schema, model, models } from "mongoose";
+
+const lessonSchema = new Schema(
+  {
+    title: {
+      required: true,
+      type: String,
+    },
+    slug: {
+      required: true,
+      type: String,
+    },
+    description: {
+      type: String,
+    },
+    duration: {
+      required: true,
+      default: 0,
+      type: Number,
+    },
+    videoUrl: {
+      required: false,
+      type: String,
+    },
+    isPreview: {
+      type: Boolean,
+      default: false,
+    },
+    isPublished: {
+      required: true,
+      type: Boolean,
+      default: false,
+    },
+    access: {
+      // required: true,
+      type: Boolean,
+      default: true,
+    },
+    order: {
+      required: true,
+      type: Number,
+    },
+  },
+
+  {
+    timestamps: true,
+  }
+);
+
+export const LessonModel = models.Lesson || model("Lesson", lessonSchema);

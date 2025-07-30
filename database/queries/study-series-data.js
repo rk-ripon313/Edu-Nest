@@ -4,7 +4,9 @@ import {
   replaceMongoIdInObject,
 } from "@/lib/transformId";
 import { CategoryModel } from "@/models/category-model";
+import { ChapterModel } from "@/models/chapter-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
+import { LessonModel } from "@/models/lesson-model";
 import { StudySeriesModel } from "@/models/StudySeries -model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
@@ -119,9 +121,23 @@ export const getStudySeriesById = async (id) => {
         model: UserModel,
         select: "firstName lastName image userName",
       })
+      .populate({
+        path: "chapters",
+        model: ChapterModel,
+        select: "title  order lessonIds",
+        match: { isPublished: true },
+        options: { sort: { order: 1 } },
+        populate: {
+          path: "lessonIds",
+          model: LessonModel,
+          select: "title  duration isPreview videoUrl  order",
+          match: { isPublished: true },
+          options: { sort: { order: 1 } },
+        },
+      })
       .lean();
 
-    if (!series?.isPublished) return {};
+    if (!series || !series?.isPublished) return {};
 
     const enrichedSeries = await enrichItemDatabyId(series, "StudySeries");
 
@@ -143,7 +159,9 @@ export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
       tags: { $in: tags },
       isPublished: true,
     })
-      .select("title category thumbnail educator price createdAt updatedAt")
+      .select(
+        "title category thumbnail educator price createdAt updatedAt chapters"
+      )
       .populate({
         path: "category",
         model: CategoryModel,
