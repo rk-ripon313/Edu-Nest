@@ -29,6 +29,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${manrope.variable} ${grotesk.variable} ${sora.variable}`}
     >
       <body className=" antialiased bg-light_bg text-light_text dark:bg-dark_bg dark:text-dark_text font-manrope ">
