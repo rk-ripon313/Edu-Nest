@@ -4,10 +4,10 @@ const userSchema = new Schema(
   {
     firstName: { required: true, type: String },
     lastName: { required: true, type: String },
-    email: { type: String, required: true, unique: true },
-    password: { type: String },
+    email: { required: true, type: String, unique: true },
+    password: { required: true, type: String },
     image: { type: String },
-    userName: { type: String, required: true, unique: true },
+    userName: { type: String, unique: true, sparse: true },
     role: {
       type: String,
       enum: ["student", "educator", "admin"],
