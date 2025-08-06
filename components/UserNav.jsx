@@ -10,19 +10,20 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { toast } from "sonner";
-
-// Simulated auth
-const user = {
-  isLoggedIn: true,
-  name: "Ripon",
-  role: "educator", // or "student"
-  image: "/avatar.png",
-};
 
 const UserNav = () => {
-  if (!user?.isLoggedIn) {
+  const { data: session, status } = useSession();
+  const user = session?.user;
+
+  // console.log({ session });
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
     return (
       <div className="md:flex gap-2">
         <Link href="/login">
@@ -52,17 +53,28 @@ const UserNav = () => {
         className="w-52 mt-4 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white right-0 left-auto"
       >
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href="/profile">Profile</Link>
+          <Link href="/account">Account</Link>
         </DropdownMenuItem>
-        {user.role === "educator" && (
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/account/enrolled-study-series">My Study Series</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/account/enrolled-books">My Books</Link>
+        </DropdownMenuItem>
+        {user?.role === "educator" && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href="/dashboard">Dashboard</Link>
+          </DropdownMenuItem>
+        )}
+        {user?.role === "student" && (
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/account/become-educator">Become A Educator</Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="transition-colors focus:bg-red-400 focus:text-accent-foreground cursor-pointer "
-          onClick={() => toast.warning("Logout!")}
+          onClick={() => signOut({ callbackUrl: "/login" })}
         >
           Logout
         </DropdownMenuItem>
