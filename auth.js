@@ -7,6 +7,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
 import { UserModel } from "./models/user-model";
+import { dbConnect } from "./service/mongo";
 
 //  Custom JWT for Credentials login
 const signCustomToken = (user) => {
@@ -68,7 +69,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     CredentialsProvider({
       async authorize(credentials) {
         if (!credentials) return null;
-
+        await dbConnect();
         const user = await UserModel.findOne({ email: credentials.email });
         if (!user || !user.password)
           throw new Error("Invalid Email or Password");

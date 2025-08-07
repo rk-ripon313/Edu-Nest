@@ -22,15 +22,6 @@ export const registerUser = async (data) => {
       return { error: { message: "Email already registered" } };
     }
 
-    const userName =
-      firstName.toLowerCase() +
-      "-" +
-      lastName.toLowerCase() +
-      "-" +
-      Date.now() +
-      "-" +
-      Math.floor(Math.random() * 10000);
-
     const hashedPassword = await hash(password, 12);
 
     const role = "student";
@@ -40,7 +31,6 @@ export const registerUser = async (data) => {
       lastName,
       email,
       password: hashedPassword,
-      userName,
       role,
     });
 

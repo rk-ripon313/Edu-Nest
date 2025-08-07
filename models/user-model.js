@@ -5,9 +5,9 @@ const userSchema = new Schema(
     firstName: { required: true, type: String },
     lastName: { required: true, type: String },
     email: { required: true, type: String, unique: true },
+    userName: { required: false, type: String },
     password: { required: true, type: String },
     image: { type: String },
-    userName: { type: String, unique: true, sparse: true },
     role: {
       type: String,
       enum: ["student", "educator", "admin"],
