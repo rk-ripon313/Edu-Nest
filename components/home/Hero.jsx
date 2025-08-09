@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export function Hero() {
+const Hero = () => {
   return (
     <section className="relative bg-light_bg dark:bg-dark_bg text-zinc-900 dark:text-white py-20 md:py-32">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -56,4 +56,5 @@ export function Hero() {
       </div>
     </section>
   );
-}
+};
+export default Hero;

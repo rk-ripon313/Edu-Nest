@@ -1,20 +1,48 @@
 import Categories from "@/components/home/Categories";
-import { Hero } from "@/components/home/Hero";
-import PopularBooks from "@/components/home/PopularBooks";
-import PopularSeries from "@/components/home/PopularSeries";
-import TopRatedBooks from "@/components/home/TopRatedBooks";
-import TopRatedSeries from "@/components/home/TopRatedSeries";
+import Hero from "@/components/home/Hero";
+import SectionLoadingFallback from "@/components/SectionLoadingFallback";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-const MainPage = async () => {
+const PopularBooks = dynamic(() => import("@/components/home/PopularBooks"), {
+  suspense: true,
+});
+const PopularSeries = dynamic(() => import("@/components/home/PopularSeries"), {
+  suspense: true,
+});
+const TopRatedBooks = dynamic(() => import("@/components/home/TopRatedBooks"), {
+  suspense: true,
+});
+const TopRatedSeries = dynamic(
+  () => import("@/components/home/TopRatedSeries"),
+  {
+    suspense: true,
+  }
+);
+
+const MainPage = () => {
   return (
     <>
       <Hero />
       <Categories />
-      <PopularBooks />
-      <PopularSeries />
-      <TopRatedBooks />
-      <TopRatedSeries />
+
+      <Suspense fallback={<SectionLoadingFallback title="Popular Books" />}>
+        <PopularBooks />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoadingFallback title="Popular Series" />}>
+        <PopularSeries />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoadingFallback title="Top Rated Books" />}>
+        <TopRatedBooks />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoadingFallback title="Top Rated Series" />}>
+        <TopRatedSeries />
+      </Suspense>
     </>
   );
 };
+
 export default MainPage;
