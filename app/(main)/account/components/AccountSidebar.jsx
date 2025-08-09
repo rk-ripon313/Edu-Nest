@@ -24,13 +24,13 @@ const AccountSidebar = ({ role }) => {
       icon: User,
     },
     {
-      label: "Book Enrollments",
-      href: "/account/books",
+      label: "My Books",
+      href: "/account/enrolled-books",
       icon: BookOpen,
     },
     {
-      label: "Study Series Enrollments",
-      href: "/account/study-series",
+      label: "My Study Series ",
+      href: "/account/enrolled-study-series",
       icon: BookMarked,
     },
     {
@@ -66,7 +66,7 @@ const AccountSidebar = ({ role }) => {
   ];
 
   return (
-    <nav className="flex flex-col gap-1 p-2">
+    <nav className="flex flex-col gap-1 p-2 mt-3">
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href;
 

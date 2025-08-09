@@ -3,7 +3,9 @@ import EducatorForm from "../components/EducatorForm";
 
 const BecomeEducatorPage = async () => {
   const user = await getCurrentUser();
-
+  if (user?.role !== "student") {
+    redirect("/login");
+  }
   return (
     <div className=" mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2 font-grotesk">
@@ -12,7 +14,7 @@ const BecomeEducatorPage = async () => {
       <p className="text-muted-foreground  mb-6">
         Fill out the form to apply as an educator.
       </p>
-      <EducatorForm currentUserName={user?.userName} initialData={user} />
+      <EducatorForm currentUserName={user?.userName} initialData={""} />
     </div>
   );
 };

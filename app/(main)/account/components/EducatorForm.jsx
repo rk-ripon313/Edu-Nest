@@ -1,6 +1,6 @@
 "use client";
 
-import { updateUsername } from "@/app/actions/account/accountActions";
+import { updateUserName } from "@/app/actions/account/accountActions";
 import { updateEducatorInfo } from "@/app/actions/account/educatorAction";
 import { EducatorSchema } from "@/lib/validators/educator-schema";
 import { usernameSchema } from "@/lib/validators/username-schema";
@@ -11,7 +11,7 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const BecomeEducator = ({
+const EducatorForm = ({
   currentUserName = "",
   initialData = {},
   isEditMode = false,
@@ -58,7 +58,7 @@ const BecomeEducator = ({
 
     setUserNameLoading(true);
     try {
-      const res = await updateUsername(trimmed);
+      const res = await updateUserName(trimmed);
       if (res?.success) {
         setIsEditingUserName(false);
         toast.success("Username updated successfully!");
@@ -264,4 +264,4 @@ const BecomeEducator = ({
   );
 };
 
-export default BecomeEducator;
+export default EducatorForm;

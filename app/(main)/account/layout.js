@@ -1,8 +1,12 @@
 import { getCurrentUser } from "@/lib/session";
+import { redirect } from "next/navigation";
 import AccountSidebar from "./components/AccountSidebar";
 
 const AccountLayout = async ({ children }) => {
   const crrUser = await getCurrentUser();
+  if (!crrUser) {
+    redirect("/login");
+  }
   return (
     <div className="min-h-screen flex ">
       {/* Sidebar */}
