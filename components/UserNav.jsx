@@ -10,20 +10,36 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const UserNav = () => {
-  const { data: session, status } = useSession();
-  const user = session?.user;
-
   // console.log({ session });
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const { firstName, lastName, image, name, role } = loggedInUser || {};
 
-  if (!user) {
+  const currentUserName = firstName
+    ? firstName?.[0].toUpperCase() + lastName?.[0].toUpperCase()
+    : name?.[0].toUpperCase();
+
+  useEffect(() => {
+    async function fetchMe() {
+      try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+        //console.log(data);
+        setLoggedInUser(data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchMe();
+  }, []);
+
+  if (!loggedInUser) {
     return (
       <div className="md:flex gap-2">
         <Link href="/login">
@@ -44,8 +60,8 @@ const UserNav = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="ring-1 ring-accent cursor-pointer pointer-events-auto">
-          <AvatarImage src={user.image} />
-          <AvatarFallback>{user.name[0]}</AvatarFallback>
+          <AvatarImage src={image} />
+          <AvatarFallback>{currentUserName}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -61,12 +77,12 @@ const UserNav = () => {
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href="/account/enrolled-books">My Books</Link>
         </DropdownMenuItem>
-        {user?.role === "educator" && (
+        {role === "educator" && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href="/dashboard">Dashboard</Link>
           </DropdownMenuItem>
         )}
-        {user?.role === "student" && (
+        {role === "student" && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href="/account/become-educator">Become A Educator</Link>
           </DropdownMenuItem>
