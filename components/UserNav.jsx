@@ -15,8 +15,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const UserNav = () => {
-  // console.log({ session });
-
   const [loggedInUser, setLoggedInUser] = useState(null);
   const { firstName, lastName, image, name, role } = loggedInUser || {};
 
