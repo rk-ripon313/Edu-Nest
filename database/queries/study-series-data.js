@@ -8,7 +8,7 @@ import { CategoryModel } from "@/models/category-model";
 import { ChapterModel } from "@/models/chapter-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { LessonModel } from "@/models/lesson-model";
-import { StudySeriesModel } from "@/models/StudySeries -model";
+import { StudySeriesModel } from "@/models/StudySeries-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";

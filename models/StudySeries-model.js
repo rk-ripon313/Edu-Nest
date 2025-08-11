@@ -26,4 +26,4 @@ const StudySeriesSchema = new Schema(
 );
 
 export const StudySeriesModel =
-  models.studyseries || model("studyseries", StudySeriesSchema);
+  models.StudySeries || model("StudySeries", StudySeriesSchema);
