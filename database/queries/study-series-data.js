@@ -176,7 +176,7 @@ export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
       .lean();
 
     //  Other Importents data added by enrichBooks fun.
-    const enrichedSeries = await enrichItemsData(related, "Book");
+    const enrichedSeries = await enrichItemsData(related, "StudySeries");
     return replaceMongoIdInArray(enrichedSeries);
   } catch (error) {
     console.error("Error fetching related Series:", error);
