@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import ActionBtns from "./ActionBtns";
 const ItemCardHeader = ({ item, series }) => {
+  const name =
+    item?.educator?.firstName && item?.educator?.lastName
+      ? item.educator.firstName + " " + item.educator.lastName
+      : item.educator?.name;
   return (
     <div className="flex flex-col md:flex-row  shadow-lg overflow-hidden">
       {/* Thumbnail */}
@@ -58,16 +62,11 @@ const ItemCardHeader = ({ item, series }) => {
           <Link href={`/educator/${item.educator?.userName}`}>
             <Avatar className="bg-secondary">
               <AvatarImage src={item.educator?.image || ""} />
-              <AvatarFallback>
-                {item.educator?.firstName?.charAt(0)}
-                {item.educator?.lastName?.charAt(0)}
-              </AvatarFallback>
+              <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
           <div>
-            <h4 className="font-medium">
-              {item.educator?.firstName} {item.educator?.lastName}
-            </h4>
+            <h4 className="font-medium">{name}</h4>
             <button className="text-sm font-sora font-medium text-primary hover:underline">
               Follow
             </button>

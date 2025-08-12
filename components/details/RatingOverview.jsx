@@ -16,14 +16,17 @@ const RatingOverview = ({ reviews }) => {
     reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
 
   const mostRatedStar =
-    5 - ratingDistribution.indexOf(Math.max(...ratingDistribution));
+    reviews.length > 0
+      ? 5 - ratingDistribution.indexOf(Math.max(...ratingDistribution))
+      : 0;
 
-  const percent5Star = ((ratingDistribution[0] / reviews.length) * 100).toFixed(
-    0
-  );
+  const percent5Star =
+    reviews.length > 0
+      ? ((ratingDistribution[0] / reviews.length) * 100).toFixed(0)
+      : 0;
 
   return (
-    <div className="md:w-1/3 p-6 rounded-lg h-fit bg-white dark:bg-dark_bg space-y-5 md:pb-16 md:pt-10 ">
+    <div className="md:w-1/3 p-6 rounded-lg h-fit bg-white dark:bg-dark_bg space-y-5 md:pb-16 md:pt-10">
       <div className="text-center space-y-2">
         <div className="text-5xl font-bold">{averageRating}</div>
         <div className="flex justify-center">
@@ -42,19 +45,29 @@ const RatingOverview = ({ reviews }) => {
           {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
         </p>
         <p className="text-sm font-medium text-green-600">
-          {getRatingLabel(averageRating)}
+          {reviews.length > 0
+            ? getRatingLabel(averageRating)
+            : "No ratings yet"}
         </p>
       </div>
 
       {/* 5 Star Percentage */}
-      <div className="shadow-md p-3 rounded-md text-sm  text-center">
-        <p>
-          <span className="font-semibold text-foreground">{percent5Star}%</span>{" "}
-          of students gave a 5-star rating
-        </p>
-        <p>
-          Most common rating: <strong>{mostRatedStar} stars</strong>
-        </p>
+      <div className="shadow-md p-3 rounded-md text-sm text-center">
+        {reviews.length > 0 ? (
+          <>
+            <p>
+              <span className="font-semibold text-foreground">
+                {percent5Star}%
+              </span>{" "}
+              of students gave a 5-star rating
+            </p>
+            <p>
+              Most common rating: <strong>{mostRatedStar} stars</strong>
+            </p>
+          </>
+        ) : (
+          <p className="text-muted-foreground">No reviews available yet.</p>
+        )}
       </div>
 
       {/* Rating Distribution */}

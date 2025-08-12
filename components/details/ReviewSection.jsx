@@ -6,7 +6,7 @@ import ReviewList from "./ReviewList";
 
 const ReviewSection = async ({ itemId, onModel }) => {
   const reviews = await getTestimonials(onModel, itemId);
-  // console.log(reviews);
+  //console.log(reviews);
 
   return (
     <SectionWrapper even>
