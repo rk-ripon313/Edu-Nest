@@ -192,7 +192,9 @@ export const getStudySeriesByType = async (type, limit = 12) => {
 
     if (type === "enroll") {
       selectedSeries = await EnrollmentModel.aggregate([
-        { $match: { status: "paid", onModel: "StudySeries" } },
+        {
+          $match: { status: { $in: ["paid", "free"] }, onModel: "StudySeries" },
+        },
         {
           $group: {
             _id: "$content",

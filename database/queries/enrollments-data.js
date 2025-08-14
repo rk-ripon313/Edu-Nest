@@ -1,9 +1,16 @@
-import { replaceMongoIdInArray } from "@/lib/transformId";
+import { getCurrentUser } from "@/lib/session";
+import {
+  replaceMongoIdInArray,
+  replaceMongoIdInObject,
+} from "@/lib/transformId";
 import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { UserModel } from "@/models/user-model";
+import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
+import { redirect } from "next/navigation";
 
+//finding all enrollment for logged in user
 export const getEnrolledItems = async (
   userId,
   model,
@@ -16,12 +23,13 @@ export const getEnrolledItems = async (
   }
 
   try {
+    await dbConnect();
     const searchRegex = search ? new RegExp(search, "i") : null;
 
     const findQuery = {
       student: new mongoose.Types.ObjectId(userId),
       onModel: model,
-      status: "paid",
+      status: { $in: ["paid", "free"] },
     };
 
     const enrolledItems = await EnrollmentModel.find(findQuery)
@@ -67,5 +75,36 @@ export const getEnrolledItems = async (
   } catch (error) {
     console.error(`Error in getEnrolledItems for model "${model}":`, error);
     return [];
+  }
+};
+
+//Finding existing Enrollment
+export const getHasEnrollment = async (onModel, itemId) => {
+  await dbConnect();
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const hasEnrollment = await EnrollmentModel.findOne({
+    student: new mongoose.Types.ObjectId(user?.id),
+    onModel,
+    content: new mongoose.Types.ObjectId(itemId),
+    status: { $in: ["paid", "free"] },
+  }).lean();
+  return hasEnrollment ? replaceMongoIdInObject(hasEnrollment) : null;
+};
+
+//create a new Enrollment
+export const createNewEnrollment = async (enrollmentData) => {
+  await dbConnect();
+  try {
+    const data = {
+      ...enrollmentData,
+      student: new mongoose.Types.ObjectId(enrollmentData.student),
+      content: new mongoose.Types.ObjectId(enrollmentData.content),
+    };
+    const newEnrollment = await EnrollmentModel.create(data);
+    return replaceMongoIdInObject(newEnrollment);
+  } catch (error) {
+    console.error("Enrollment creation failed:", error);
+    return null;
   }
 };

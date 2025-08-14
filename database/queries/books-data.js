@@ -170,7 +170,7 @@ export const getBooksByType = async (type, limit = 12) => {
 
     if (type === "enroll") {
       selectedBooks = await EnrollmentModel.aggregate([
-        { $match: { status: "paid", onModel: "Book" } },
+        { $match: { status: { $in: ["paid", "free"] }, onModel: "Book" } },
         {
           $group: {
             _id: "$content",

@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/formetPrice";
 import { BookOpen, List, StarIcon, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -96,13 +97,19 @@ const ItemCardHeader = ({ item, series }) => {
         {/* Price */}
         <div>
           <span className="text-2xl font-semibold text-foreground">
-            {item.price > 0 ? `৳${item.price.toFixed(2)}` : "Free"}
+            {item.price > 0 ? `${formatPrice(item?.price)}` : "Free"}
           </span>
         </div>
 
         {/* CTA */}
 
-        <ActionBtns />
+        <ActionBtns
+          itemId={item?.id}
+          price={item?.price}
+          isOwner={item?.isOwner}
+          isEnrolled={item?.isEnrolled}
+          series={series}
+        />
       </div>
     </div>
   );

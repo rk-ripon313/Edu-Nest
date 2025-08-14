@@ -12,8 +12,13 @@ const EnrollmentSchema = new Schema(
     price: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["pending", "paid", "cancelled"],
+      enum: ["pending", "free", "paid", "cancelled"],
       default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["stripe", "sslcommerz", "free", "manual"],
+      default: "free",
     },
     transactionId: { type: String },
   },
