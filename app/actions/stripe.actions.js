@@ -12,7 +12,6 @@ import { BookModel } from "@/models/book-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 import { dbConnect } from "@/service/mongo";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
 const currency = "BDT";
 
@@ -26,7 +25,8 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
   try {
     await dbConnect();
 
-    const origin = headers().get("origin");
+    const origin = process.env.NEXT_PUBLIC_BASE_URL;
+
     const onModel = series ? "StudySeries" : "Book";
 
     const hasEnrollment = await getHasEnrollment(onModel, itemId);
