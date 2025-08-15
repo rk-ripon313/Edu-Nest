@@ -8,7 +8,6 @@ import { EnrollmentModel } from "@/models/enrollment-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
-import { redirect } from "next/navigation";
 
 //finding all enrollment for logged in user
 export const getEnrolledItems = async (
@@ -82,7 +81,7 @@ export const getEnrolledItems = async (
 export const getHasEnrollment = async (onModel, itemId) => {
   await dbConnect();
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) return null;
   const hasEnrollment = await EnrollmentModel.findOne({
     student: new mongoose.Types.ObjectId(user?.id),
     onModel,
@@ -96,12 +95,7 @@ export const getHasEnrollment = async (onModel, itemId) => {
 export const createNewEnrollment = async (enrollmentData) => {
   await dbConnect();
   try {
-    const data = {
-      ...enrollmentData,
-      student: new mongoose.Types.ObjectId(enrollmentData.student),
-      content: new mongoose.Types.ObjectId(enrollmentData.content),
-    };
-    const newEnrollment = await EnrollmentModel.create(data);
+    const newEnrollment = await EnrollmentModel.create(enrollmentData);
     return replaceMongoIdInObject(newEnrollment);
   } catch (error) {
     console.error("Enrollment creation failed:", error);

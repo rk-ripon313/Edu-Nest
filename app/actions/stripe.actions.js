@@ -10,7 +10,9 @@ import { formatAmountForStripe } from "@/lib/stripe-helpers";
 import { replaceMongoIdInObject } from "@/lib/transformId";
 import { BookModel } from "@/models/book-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
+import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
+import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
 
 const currency = "BDT";
@@ -38,9 +40,19 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
     const enrollItem = series
       ? await StudySeriesModel.findById(itemId)
           .select(" title price description thumbnail")
+          .populate({
+            path: "educator",
+            model: UserModel,
+            select: "firstName lastName name email",
+          })
           .lean()
       : await BookModel.findById(itemId)
           .select("title price description thumbnail")
+          .populate({
+            path: "educator",
+            model: UserModel,
+            select: "firstName lastName name email",
+          })
           .lean();
 
     if (!enrollItem) {
@@ -51,9 +63,9 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
     if (item.price === 0) {
       // Free item → DB save & return
       const freeEnrollment = await createNewEnrollment({
-        student: user?.id,
+        student: new mongoose.Types.ObjectId(user?.id),
         onModel,
-        content: item?.id,
+        content: new mongoose.Types.ObjectId(item?.id),
         price: 0,
         status: "free",
         paymentMethod: "free",
@@ -99,11 +111,21 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
           userId: user.id,
           userEmail: user.email,
           itemId: item.id,
+          educatorName:
+            `${item.educator?.firstName || ""} ${
+              item.educator?.lastName || ""
+            }`.trim() || item.educator?.name,
+          educatorEmail: item.educator?.email,
           onModel,
           originalPriceBDT: item.price,
+          itemName: item.title,
+          itemType: onModel,
+          itemImage: item.thumbnail || "",
         },
       },
+
       success_url: `${origin}/enroll-success?session_id={CHECKOUT_SESSION_ID}&onModel=${onModel}&itemId=${item.id}`,
+
       cancel_url: `${origin}/${
         series ? `study-series/${item.id}` : `books/${item.id}`
       }`,
