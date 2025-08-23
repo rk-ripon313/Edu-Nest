@@ -7,18 +7,21 @@ import { useState } from "react";
 import Empty from "../Empty";
 import { Button } from "../ui/button";
 
-const ReviewList = ({ reviews }) => {
+const ReviewList = ({ reviews = [], isRead }) => {
   const [expanded, setExpanded] = useState(false);
-  const visibleReviews = expanded ? reviews : reviews.slice(0, 5);
+
   if (reviews.length === 0) {
     return (
-      <div className="md:w-2/3 bg-white dark:bg-dark_bg p-6 rounded-lg shadow-sm text-center text-muted-foreground text-sm">
+      <div
+        className={` ${isRead ? "w-full h-full" : "md:w-2/3"}  bg-white dark:bg-dark_bg p-6 rounded-lg shadow-sm text-center text-muted-foreground text-sm`}
+      >
         <Empty title={"No reviews yet."} />
       </div>
     );
   }
+  const visibleReviews = expanded ? reviews : reviews.slice(0, 5);
   return (
-    <div className="md:w-2/3 ">
+    <div className={isRead ? "w-full h-full" : "md:w-2/3"}>
       <div
         className={`
           h-auto
