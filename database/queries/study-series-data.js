@@ -246,3 +246,37 @@ export const getStudySeriesByType = async (type, limit = 12) => {
     return [];
   }
 };
+
+//study seris data with series progress data for play page ...
+
+export const getStudySeriesForPlay = async (id) => {
+  if (!id) return;
+
+  try {
+    await dbConnect();
+
+    const series = await StudySeriesModel.findById(id)
+      .populate({
+        path: "chapters",
+        model: ChapterModel,
+        select: "title  order lessonIds",
+        match: { isPublished: true },
+        options: { sort: { order: 1 } },
+        populate: {
+          path: "lessonIds",
+          model: LessonModel,
+          select: "title  duration isPreview videoUrl access  order",
+          match: { isPublished: true },
+          options: { sort: { order: 1 } },
+        },
+      })
+      .lean();
+
+    if (!series || !series?.isPublished) return null;
+
+    return replaceMongoIdInObject(series);
+  } catch (error) {
+    console.error("Error fetching PlayPage Series:", error);
+    return null;
+  }
+};

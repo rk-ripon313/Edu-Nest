@@ -40,6 +40,10 @@ const lessonSchema = new Schema(
       required: true,
       type: Number,
     },
+    resources: {
+      type: [String],
+      default: [],
+    },
   },
 
   {
