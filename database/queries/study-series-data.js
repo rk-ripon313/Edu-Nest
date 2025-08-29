@@ -265,7 +265,7 @@ export const getStudySeriesForPlay = async (id) => {
         populate: {
           path: "lessonIds",
           model: LessonModel,
-          select: "title  duration isPreview videoUrl access  order",
+          select: "title  duration isPreview videoUrl access order chapter",
           match: { isPublished: true },
           options: { sort: { order: 1 } },
         },

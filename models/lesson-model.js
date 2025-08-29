@@ -22,6 +22,11 @@ const lessonSchema = new Schema(
       required: false,
       type: String,
     },
+    chapter: {
+      required: true,
+      type: Schema.ObjectId,
+      ref: "Chapter",
+    },
     isPreview: {
       type: Boolean,
       default: false,
