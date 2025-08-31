@@ -1,5 +1,6 @@
 import Empty from "@/components/Empty";
 
+import Progress from "@/components/Progress";
 import { PlayProvider } from "@/context/PlayContext";
 import { getHasEnrollment } from "@/database/queries/enrollments-data";
 import { getStudySeriesForPlay } from "@/database/queries/study-series-data";
@@ -46,6 +47,12 @@ const PlayPage = async ({ params: { id } }) => {
         </div>
         {/* Chapter list - 1/3 width on lg */}
         <div className="lg:col-span-1  bg-white dark:bg-gray-800 mb-1 rounded-md shadow-md">
+          <div className="px-2 py-1">
+            <Progress variant="success" value={studySeries.totalProgress} />
+            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+              {studySeries.totalProgress}% completed
+            </p>
+          </div>
           <ChapterList chapters={studySeries?.chapters} />
         </div>
       </section>

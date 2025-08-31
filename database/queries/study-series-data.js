@@ -1,5 +1,6 @@
 import { applySort } from "@/lib/applySort";
 import { enrichItemDatabyId, enrichItemsData } from "@/lib/enrich-item-data";
+import { getCurrentUser } from "@/lib/session";
 import {
   replaceMongoIdInArray,
   replaceMongoIdInObject,
@@ -8,11 +9,13 @@ import { CategoryModel } from "@/models/category-model";
 import { ChapterModel } from "@/models/chapter-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { LessonModel } from "@/models/lesson-model";
+import { ReportModel } from "@/models/repport-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
+import { createAReport } from "./reports-data";
 
 export const getStudySeries = async ({
   search,
@@ -247,25 +250,26 @@ export const getStudySeriesByType = async (type, limit = 12) => {
   }
 };
 
-//study seris data with series progress data for play page ...
-
+//study series data with progress
 export const getStudySeriesForPlay = async (id) => {
-  if (!id) return;
+  if (!id) return null;
 
   try {
     await dbConnect();
+    const user = await getCurrentUser();
+    if (!user) return null;
 
     const series = await StudySeriesModel.findById(id)
       .populate({
         path: "chapters",
         model: ChapterModel,
-        select: "title  order lessonIds",
+        select: "title order lessonIds",
         match: { isPublished: true },
         options: { sort: { order: 1 } },
         populate: {
           path: "lessonIds",
           model: LessonModel,
-          select: "title  duration isPreview videoUrl access order chapter",
+          select: "title duration isPreview videoUrl access order chapter",
           match: { isPublished: true },
           options: { sort: { order: 1 } },
         },
@@ -273,6 +277,50 @@ export const getStudySeriesForPlay = async (id) => {
       .lean();
 
     if (!series || !series?.isPublished) return null;
+    const studySeries = new mongoose.Types.ObjectId(id);
+    const student = new mongoose.Types.ObjectId(user.id);
+
+    // report..
+    let report = await ReportModel.findOne({ studySeries, student }).lean();
+    if (!report) {
+      report = await createAReport({ studySeries, student });
+    }
+
+    const completedLessons =
+      report?.totalCompletedLessons?.map((l) => l.toString()) || [];
+    const completedChapters =
+      report?.totalCompletedChapter?.map((c) => c.toString()) || [];
+
+    // lesson-level completed flag inject
+    series.chapters = series.chapters.map((ch) => {
+      const lessons = ch.lessonIds.map((ls) => ({
+        ...ls,
+        completed: completedLessons.includes(ls._id.toString()),
+      }));
+
+      const completedCount = lessons.filter((ls) => ls.completed).length;
+
+      const isChapterCompleted =
+        lessons.length > 0 &&
+        lessons.every((ls) => completedLessons.includes(ls._id.toString()));
+
+      return {
+        ...ch,
+        lessonIds: lessons,
+        chapterCompleted:
+          completedChapters.includes(ch._id.toString()) || isChapterCompleted,
+        totalLessons: lessons.length,
+        completedLessons: completedCount,
+      };
+    });
+
+    // series-level total progress
+    const allLessons = series.chapters.flatMap((ch) => ch.lessonIds);
+    const totalCount = allLessons.length;
+    const completedCount = allLessons.filter((ls) => ls.completed).length;
+
+    series.totalProgress =
+      totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
     return replaceMongoIdInObject(series);
   } catch (error) {

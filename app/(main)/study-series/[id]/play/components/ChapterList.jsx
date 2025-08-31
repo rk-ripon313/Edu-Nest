@@ -23,7 +23,12 @@ const ChapterList = ({ chapters }) => {
             className="border rounded-lg shadow-sm"
           >
             <AccordionTrigger className="px-4 py-2 font-semibold text-sm bg-muted hover:bg-muted/70 dark:bg-slate-950 rounded-t-lg">
-              {lessons.title}
+              <div className="flex items-center justify-between w-full">
+                <span>{lessons.title}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                  {lessons.completedLessons}/{lessons.totalLessons}
+                </span>
+              </div>
             </AccordionTrigger>
 
             <AccordionContent className="space-y-1 px-2 py-2">

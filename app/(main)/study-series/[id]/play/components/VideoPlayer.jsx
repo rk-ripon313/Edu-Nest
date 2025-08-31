@@ -58,7 +58,6 @@ const VideoPlayer = ({ studySeriesId }) => {
           lastTime: duration,
         });
         setEnded(false);
-        router.refresh();
       } catch (err) {
         console.error("Lesson complete failed:", err);
       }
