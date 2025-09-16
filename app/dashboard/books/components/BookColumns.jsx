@@ -130,4 +130,3 @@ export const bookColumns = [
     ),
   },
 ];
-// Student Name	Student Email	Quiz Mark	Progress	Enroll Date

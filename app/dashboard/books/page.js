@@ -1,6 +1,6 @@
 import { getEducatorBooks } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
-import { bookColumns } from "./components/bookColumns";
+import { bookColumns } from "./components/BookColumns";
 import BooksTable from "./components/BooksTable";
 
 const BookListPage = async () => {
