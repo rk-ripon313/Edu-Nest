@@ -36,8 +36,8 @@ export const getEnrolledItems = async (
         sort === "latest"
           ? { createdAt: -1 }
           : sort === "oldest"
-          ? { createdAt: 1 }
-          : {}
+            ? { createdAt: 1 }
+            : {}
       )
       .populate({
         path: "content",
@@ -100,5 +100,28 @@ export const createNewEnrollment = async (enrollmentData) => {
   } catch (error) {
     console.error("Enrollment creation failed:", error);
     return null;
+  }
+};
+
+// enrollment list for a item .
+export const getEnrollments = async (onModel, itemId) => {
+  try {
+    await dbConnect();
+
+    const enrollments = await EnrollmentModel.find({
+      onModel: onModel,
+      content: new mongoose.Types.ObjectId(itemId),
+    })
+      .populate({
+        path: "student",
+        model: UserModel,
+        select: "image firstName lastName userName email",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+    return replaceMongoIdInArray(enrollments);
+  } catch (error) {
+    console.error("fetch Fail");
+    return [];
   }
 };
