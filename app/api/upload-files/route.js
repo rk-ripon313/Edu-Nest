@@ -20,7 +20,7 @@ export const POST = async (req) => {
         { status: 400 }
       );
     }
-
+    const uploadedUrls = [];
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -32,6 +32,8 @@ export const POST = async (req) => {
               folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
               resource_type: fileType === "pdf" ? "raw" : "image",
               format: fileType === "pdf" ? "pdf" : undefined,
+              quality: "auto",
+              fetch_format: "auto",
             },
             (err, res) => (err ? reject(err) : resolve(res))
           )
