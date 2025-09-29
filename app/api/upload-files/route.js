@@ -8,19 +8,18 @@ cloudinary.config({
 });
 
 export const POST = async (req) => {
-  const formData = await req.formData();
-  const files = formData.getAll("file");
-  const subFolder = formData.get("subFolder") || "";
-
-  if (!files || files.length === 0) {
-    return NextResponse.json(
-      { success: false, message: "No file provided" },
-      { status: 400 }
-    );
-  }
-
   try {
-    const uploadedUrls = [];
+    const formData = await req.formData();
+    const files = formData.getAll("file");
+    const subFolder = formData.get("subFolder") || "";
+    const fileType = formData.get("fileType");
+
+    if (!files || files.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No file provided" },
+        { status: 400 }
+      );
+    }
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
@@ -31,6 +30,8 @@ export const POST = async (req) => {
           .upload_stream(
             {
               folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
+              resource_type: fileType === "pdf" ? "raw" : "image",
+              format: fileType === "pdf" ? "pdf" : undefined,
             },
             (err, res) => (err ? reject(err) : resolve(res))
           )

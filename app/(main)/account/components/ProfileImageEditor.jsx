@@ -1,6 +1,7 @@
 "use client";
 
 import { updateUserField } from "@/app/actions/account/accountActions";
+import { uploadFileToCloudinary } from "@/lib/upload";
 import imageCompression from "browser-image-compression";
 import { Pencil } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -28,25 +29,18 @@ const ProfileImageEditor = ({ image, name }) => {
 
       // Compress image
       const compressedFile = await imageCompression(file, options);
-      const formData = new FormData();
-      formData.append("file", compressedFile);
-      formData.append("subFolder", "Profile");
-
       setIsUploading(true);
 
-      // Step 1: Upload to Cloudinary via API route
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
-      });
+      const imageUrl = await uploadFileToCloudinary(
+        compressedFile,
+        "image",
+        "Profile"
+      );
 
-      const data = await res.json();
-      if (!data.success || !data.urls) {
-        toast.error(data.message || "Image upload failed");
+      if (!imageUrl) {
+        toast.error("Image upload failed");
         return;
       }
-
-      const imageUrl = typeof data.urls === "string" ? data.urls : data.urls[0];
 
       // Step 2: Save URL to DB via action
       const dbRes = await updateUserField({ image: imageUrl });
