@@ -15,7 +15,7 @@ const DashboardLayout = async ({ children }) => {
   }
 
   return (
-    <div className="h-dvh w-full bg-white dark:bg-slate-950">
+    <div className="h-dvh w-full ">
       {/* Top Navbar */}
       <div className="h-[64px] lg:pl-72 fixed inset-y-0 w-full z-50">
         <DashBoardNavbar />
@@ -27,7 +27,7 @@ const DashboardLayout = async ({ children }) => {
       </aside>
 
       {/* Main */}
-      <main className="pt-[64px] lg:pl-72 h-dvh overflow-y-auto">
+      <main className="pt-[64px] lg:pl-72 ">
         <div className="p-4 lg:p-6">{children}</div>
       </main>
     </div>
