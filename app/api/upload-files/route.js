@@ -30,7 +30,8 @@ export const POST = async (req) => {
           .upload_stream(
             {
               folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
-              resource_type: fileType === "pdf" ? "raw" : "image",
+              // resource_type: fileType === "pdf" ? "raw" : "image",
+              resource_type: "auto",
               format: fileType === "pdf" ? "pdf" : undefined,
               quality: "auto",
               fetch_format: "auto",

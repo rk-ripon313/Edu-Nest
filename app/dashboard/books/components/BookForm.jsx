@@ -7,10 +7,12 @@ import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { AddaNewBook, validateCategory } from "@/app/actions/boook.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadFileToCloudinary } from "@/lib/upload";
 import imageCompression from "browser-image-compression";
 import { Eye, EyeOff, FileText, ImageIcon } from "lucide-react";
 
@@ -133,27 +135,75 @@ const BookForm = ({ categories }) => {
   // Submit--saveing a new book in db
 
   const onSubmit = async (data) => {
-    const finalData = {
-      ...data,
-      outcomes,
-      tags,
-      thumbnail,
-      file,
-      isPublished,
-    };
-    // console.log({ onsubmit: finalData });
-    const result = bookSchema.safeParse(finalData);
+    try {
+      //validate form schema
+      const result = bookSchema.safeParse({
+        ...data,
+        outcomes,
+        tags,
+        thumbnail,
+        file,
+        isPublished,
+      });
+      if (!result.success) {
+        // console.error(result.error.format());
+        toast.error(
+          result?.error?.issues?.[0]?.message || "Validation failed!"
+        );
+        return;
+      }
 
-    if (!result.success) {
-      // console.error(result.error.format());
-      const firstError =
-        result?.error?.issues?.[0]?.message || "Validation failed!";
-      toast.error(firstError);
-      return;
+      // validate category (server)
+      const categoryId = await validateCategory(data?.category);
+      if (!categoryId) {
+        toast.error("Category does not exist!");
+        return;
+      }
+
+      //uplood file and thumbnail to cloudinary
+
+      const [thumbnailUrl, fileUrl] = await Promise.all([
+        uploadFileToCloudinary(thumbnail, "image", "thumbnail"),
+        uploadFileToCloudinary(file, "pdf", "Books"),
+      ]);
+
+      if (!thumbnailUrl) {
+        toast.error("Image upload failed");
+        return;
+      }
+
+      if (!fileUrl) {
+        toast.error("fileUrl upload failed");
+        return;
+      }
+
+      // save in DB (server action)
+      const res = await AddaNewBook({
+        ...data,
+        outcomes,
+        tags,
+        thumbnailUrl,
+        fileUrl,
+        categoryId,
+        isPublished,
+      });
+
+      if (!res.success) {
+        toast.error(res?.message || "Book not saved");
+        return;
+      }
+
+      toast.success(" Book added successfully!");
+
+      reset();
+      setOutcomes([]);
+      setTags([]);
+      setThumbnail(null);
+      setFile(null);
+      setIsPublished(false);
+    } catch (error) {
+      toast.error(error?.message || "Book Added Failed! ");
     }
-    // console.log("Final Data:", result.data);
-
-    //call  action
   };
 
   return (

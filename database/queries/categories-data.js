@@ -1,3 +1,4 @@
+import { replaceMongoIdInObject } from "@/lib/transformId";
 import { CategoryModel } from "@/models/category-model";
 import { dbConnect } from "@/service/mongo";
 
@@ -30,5 +31,24 @@ export const getUniqueCategories = async () => {
       subSet: new Set(),
       partSet: new Set(),
     };
+  }
+};
+
+export const getACategory = async ({ label, group, subject, part }) => {
+  try {
+    await dbConnect();
+    const query = { label, group, subject };
+
+    if (part) {
+      query.part = part;
+    }
+
+    const category = await CategoryModel.findOne(query).lean();
+    if (!category) {
+      throw new Error("Category Not Found!");
+    }
+    return replaceMongoIdInObject(category);
+  } catch (error) {
+    throw new Error(error?.message || "Category Not Found!");
   }
 };
