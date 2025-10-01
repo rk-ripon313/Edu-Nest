@@ -15,8 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { uploadFileToCloudinary } from "@/lib/upload";
 import imageCompression from "browser-image-compression";
 import { Eye, EyeOff, FileText, ImageIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const BookForm = ({ categories }) => {
+  const router = useRouter();
   const [outcomes, setOutcomes] = useState([]);
   const [tags, setTags] = useState([]);
   const [outcomeInput, setOutcomeInput] = useState("");
@@ -201,6 +203,7 @@ const BookForm = ({ categories }) => {
       setThumbnail(null);
       setFile(null);
       setIsPublished(false);
+      router.push("/dashboard/books");
     } catch (error) {
       toast.error(error?.message || "Book Added Failed! ");
     }
