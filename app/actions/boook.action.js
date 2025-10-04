@@ -12,11 +12,16 @@ export const validateCategory = async ({ label, group, subject, part }) => {
   try {
     const category = await getACategory({ label, group, subject, part });
 
-    if (!category) throw new Error("Category not found");
-
-    return category.id;
+    if (!category) {
+      return { success: false, message: "Category Not Found!" };
+    }
+    return {
+      success: true,
+      message: "Book created successfully",
+      categoryId: category.id,
+    };
   } catch (error) {
-    throw new Error(error?.message || "Category Not Found!");
+    return { success: false, message: error?.message || "Category Not Found!" };
   }
 };
 
@@ -51,14 +56,62 @@ export const AddaNewBook = async ({
       educator: new mongoose.Types.ObjectId(user.id),
       isPublished,
     });
+
     if (!newBook) {
-      throw new Error("New Book added failed!");
+      return { success: false, message: "New Book added failed!" };
     }
+    return { success: true, message: "Book created successfully", newBook };
+  } catch (err) {
+    return {
+      success: false,
+      message: `Could not added new Book: ${err?.message}`,
+    };
+  }
+};
+
+export const updateABook = async (bookId, dataToUpdate) => {
+  try {
+    await dbConnect();
+    const updatedBook = await BookModel.findByIdAndUpdate(
+      bookId,
+      dataToUpdate,
+      { new: true, lean: true }
+    );
+
+    if (!updatedBook) {
+      return { success: false, message: "Book not found" };
+    }
+
     return {
       success: true,
-      book: JSON.parse(JSON.stringify(newBook)),
+      message: "Book updated successfully",
+      data: updatedBook,
     };
-  } catch (err) {
-    throw new Error(`Could not added new Book: ${err?.message}`);
+  } catch (e) {
+    return {
+      success: false,
+      message: e?.message || "Something went wrong",
+    };
+  }
+};
+
+export const deleteABook = async (bookId) => {
+  try {
+    await dbConnect();
+    const res = await BookModel.findByIdAndDelete(bookId);
+
+    if (!res) {
+      return { success: false, message: "Book not found or already deleted" };
+    }
+
+    return {
+      success: true,
+      message: "Book deleted successfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: e?.message || "Something went wrong while deleting ",
+    };
   }
 };
