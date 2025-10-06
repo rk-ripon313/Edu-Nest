@@ -72,11 +72,20 @@ export const AddaNewBook = async ({
 export const updateABook = async (bookId, dataToUpdate) => {
   try {
     await dbConnect();
-    const updatedBook = await BookModel.findByIdAndUpdate(
-      bookId,
-      dataToUpdate,
-      { new: true, lean: true }
-    );
+
+    const { category, ...rest } = dataToUpdate;
+
+    const updateData = {
+      ...rest,
+      ...(category && {
+        category: new mongoose.Types.ObjectId(category),
+      }),
+    };
+
+    const updatedBook = await BookModel.findByIdAndUpdate(bookId, updateData, {
+      new: true,
+      lean: true,
+    });
 
     if (!updatedBook) {
       return { success: false, message: "Book not found" };

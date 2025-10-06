@@ -2,6 +2,7 @@ import { getUniqueCategories } from "@/database/queries/categories-data";
 import { getEducatorBookInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import BookHeaderControls from "../../components/BookHeaderControls";
+import CategoryForm from "../../components/CategoryForm";
 import DescriptionForm from "../../components/DescriptionForm";
 import PriceForm from "../../components/PriceForm";
 import TitleForm from "../../components/TitleForm";
@@ -27,35 +28,42 @@ const EditBookPage = async ({ params: { bookId } }) => {
   }
 
   const categories = await getUniqueCategories();
-  console.log({ book });
+  // console.log({ book });
 
   return (
-    <>
-      <div className=" rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between  px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold font-grotesk">Edit Book</h1>
-            <p className=" mt-1">Manage your book information</p>
-          </div>
-          <BookHeaderControls book={book} />
+    <div className=" rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between  px-6 py-4">
+        <div>
+          <h1 className="text-2xl font-bold font-grotesk">Edit Book</h1>
+          <p className=" mt-1">Manage your book information</p>
+        </div>
+        <BookHeaderControls book={book} />
+      </div>
+
+      {/* Book Edit Form */}
+      <div className="bg-white dark:bg-slate-950">
+        {/* Basic Information */}
+        <div className="px-6 py-4  border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">Basic Information</h2>
+
+          <TitleForm title={book?.title} bookId={book?.id} />
+          <DescriptionForm description={book?.description} bookId={book?.id} />
+          <PriceForm price={book?.price} bookId={book?.id} />
         </div>
 
-        {/* Book Edit Form */}
-        <div className="bg-white dark:bg-slate-950">
-          {/* Basic Information */}
-          <div className="px-6 py-4  border-b border-gray-200">
-            <h2 className="text-lg font-semibold ">Basic Information</h2>
-            <TitleForm title={book?.title} bookId={book?.id} />
-            <DescriptionForm
-              description={book?.description}
-              bookId={book?.id}
-            />
-            <PriceForm price={book?.price} bookId={book?.id} />
-          </div>
+        {/* Category Information */}
+        <div className="px-6 py-4  border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">Category</h2>
+
+          <CategoryForm
+            category={book.category}
+            categories={categories}
+            bookId={book?.id}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
