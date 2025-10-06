@@ -2,13 +2,15 @@ import { getUniqueCategories } from "@/database/queries/categories-data";
 import { getEducatorBookInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import BookHeaderControls from "../../components/BookHeaderControls";
+import DescriptionForm from "../../components/DescriptionForm";
+import PriceForm from "../../components/PriceForm";
+import TitleForm from "../../components/TitleForm";
 
 const EditBookPage = async ({ params: { bookId } }) => {
   const user = await getCurrentUser();
   if (!user || user.role !== "educator") return <p>Access Denied</p>;
 
   const book = await getEducatorBookInfobyId(bookId, user?.id);
-
   if (!book) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -25,7 +27,7 @@ const EditBookPage = async ({ params: { bookId } }) => {
   }
 
   const categories = await getUniqueCategories();
-  // console.log({ book });
+  console.log({ book });
 
   return (
     <>
@@ -38,7 +40,20 @@ const EditBookPage = async ({ params: { bookId } }) => {
           </div>
           <BookHeaderControls book={book} />
         </div>
+
         {/* Book Edit Form */}
+        <div className="bg-white dark:bg-slate-950">
+          {/* Basic Information */}
+          <div className="px-6 py-4  border-b border-gray-200">
+            <h2 className="text-lg font-semibold ">Basic Information</h2>
+            <TitleForm title={book?.title} bookId={book?.id} />
+            <DescriptionForm
+              description={book?.description}
+              bookId={book?.id}
+            />
+            <PriceForm price={book?.price} bookId={book?.id} />
+          </div>
+        </div>
       </div>
     </>
   );
