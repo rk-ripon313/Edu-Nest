@@ -15,7 +15,7 @@ const bookSchema = new Schema(
     subject: { type: String },
 
     fileUrl: { type: String, required: true },
-    outComes: [{ type: String }],
+    outcomes: [{ type: String }],
     tags: [{ type: String }],
 
     price: { type: Number, default: 0 },
