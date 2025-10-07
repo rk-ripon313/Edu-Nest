@@ -5,6 +5,7 @@ import BookHeaderControls from "../../components/BookHeaderControls";
 import CategoryForm from "../../components/CategoryForm";
 import DescriptionForm from "../../components/DescriptionForm";
 import EditableListForm from "../../components/EditableListForm";
+import FileForm from "../../components/FileForm";
 import PriceForm from "../../components/PriceForm";
 import TitleForm from "../../components/TitleForm";
 
@@ -74,6 +75,13 @@ const EditBookPage = async ({ params: { bookId } }) => {
             bookId={book?.id}
           />
           <EditableListForm items={book?.tags} type="tags" bookId={book?.id} />
+        </div>
+
+        {/* File Information */}
+        <div className="px-6 py-4  border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">File Info</h2>
+
+          <FileForm book={book} />
         </div>
       </div>
     </div>
