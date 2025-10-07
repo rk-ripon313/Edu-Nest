@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/session";
 import BookHeaderControls from "../../components/BookHeaderControls";
 import CategoryForm from "../../components/CategoryForm";
 import DescriptionForm from "../../components/DescriptionForm";
+import EditableListForm from "../../components/EditableListForm";
 import PriceForm from "../../components/PriceForm";
 import TitleForm from "../../components/TitleForm";
 
@@ -61,6 +62,18 @@ const EditBookPage = async ({ params: { bookId } }) => {
             categories={categories}
             bookId={book?.id}
           />
+        </div>
+
+        {/* Additional Information */}
+        <div className="px-6 py-4  border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">Additional Info</h2>
+
+          <EditableListForm
+            items={book?.outcomes}
+            type="outcomes"
+            bookId={book?.id}
+          />
+          <EditableListForm items={book?.tags} type="tags" bookId={book?.id} />
         </div>
       </div>
     </div>
