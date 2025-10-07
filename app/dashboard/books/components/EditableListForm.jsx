@@ -4,10 +4,12 @@ import { updateABook } from "@/app/actions/boook.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const EditableListForm = ({ items = [], type, bookId }) => {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [list, setList] = useState(items);
   const [newItem, setNewItem] = useState("");
