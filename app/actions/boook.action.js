@@ -60,7 +60,7 @@ export const AddaNewBook = async ({
     if (!newBook) {
       return { success: false, message: "New Book added failed!" };
     }
-    return { success: true, message: "Book created successfully", newBook };
+    return { success: true, message: "Book created successfully" };
   } catch (err) {
     return {
       success: false,

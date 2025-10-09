@@ -156,8 +156,8 @@ const BookForm = ({ categories }) => {
       }
 
       // validate category (server)
-      const category = await validateCategory(data?.category);
-      if (!category) {
+      const isValidcategory = await validateCategory(data?.category);
+      if (!isValidcategory.success) {
         toast.error("Category does not exist!");
         return;
       }
@@ -186,7 +186,7 @@ const BookForm = ({ categories }) => {
         tags,
         thumbnailUrl,
         fileUrl,
-        categoryId: category?.categoryId,
+        categoryId: isValidcategory?.categoryId,
         isPublished,
       });
 
