@@ -2,19 +2,25 @@ import { enrichItemsData } from "@/lib/enrich-item-data";
 import { replaceMongoIdInObject } from "@/lib/transformId";
 import { BookModel } from "@/models/book-model";
 import { CategoryModel } from "@/models/category-model";
+import { ChapterModel } from "@/models/chapter-model";
+import { LessonModel } from "@/models/lesson-model";
+import { StudySeriesModel } from "@/models/StudySeries-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { getEnrollments } from "./enrollments-data";
 import { getTestimonials } from "./testimonials-data";
 
-export const getEducatorBooks = async (userId, enrich = false) => {
+//educator items list fn..
+export const getEducatorItems = async (onModel, userId, enrich = false) => {
   try {
     await dbConnect();
+    const model = onModel === "Book" ? BookModel : StudySeriesModel;
 
-    const books = await BookModel.find({
-      educator: new mongoose.Types.ObjectId(userId),
-    })
-      .select("title category  isPublished  price createdAt updatedAt")
+    const items = await model
+      .find({
+        educator: new mongoose.Types.ObjectId(userId),
+      })
+      .select("title category chapters isPublished  price createdAt updatedAt")
       .populate({
         path: "category",
         model: CategoryModel,
@@ -25,39 +31,65 @@ export const getEducatorBooks = async (userId, enrich = false) => {
 
     if (enrich) {
       //enrich enrollment and reviews data
-      return await enrichItemsData(books, "Book");
+      return await enrichItemsData(items, onModel);
     }
-    return books;
+    return items;
   } catch (error) {
-    console.error("Error fetching Books:", error);
+    console.error("Error fetching items:", error);
     return [];
   }
 };
 
-export const getEducatorBookInfobyId = async (
-  bookId,
+//educator item details fn..
+export const getEducatorItemInfobyId = async (
+  onModel,
+  itemId,
   userId,
   enrich = false
 ) => {
   try {
     await dbConnect();
 
-    let book = await BookModel.findById(bookId)
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .lean();
+    let item = {};
 
-    if (!book || book?.educator?.toString() !== userId) {
+    if (onModel === "StudySeries") {
+      item = await StudySeriesModel.findById(itemId)
+        .populate({
+          path: "category",
+          model: CategoryModel,
+          select: "label group subject part",
+        })
+        .populate({
+          path: "chapters",
+          model: ChapterModel,
+          select: "title  order lessonIds",
+          options: { sort: { order: 1 } },
+          populate: {
+            path: "lessonIds",
+            model: LessonModel,
+            select: "title  duration isPreview videoUrl  order",
+            options: { sort: { order: 1 } },
+          },
+        })
+        .lean();
+    } else {
+      item = await BookModel.findById(itemId)
+        .populate({
+          path: "category",
+          model: CategoryModel,
+          select: "label group subject part",
+        })
+        .lean();
+    }
+
+    if (!item || item?.educator?.toString() !== userId) {
       return null;
     }
 
     if (enrich) {
       // fetch enrollments & reviews
-      const enrollments = await getEnrollments("Book", bookId);
-      const reviews = await getTestimonials("Book", bookId);
+      const enrollments = await getEnrollments(onModel, itemId);
+      const reviews = await getTestimonials(onModel, itemId);
 
       // student-wise data marge
       const studentData = enrollments.map((enroll) => {
@@ -82,12 +114,12 @@ export const getEducatorBookInfobyId = async (
         };
       });
 
-      book.students = studentData;
+      item.students = studentData;
     }
 
-    return replaceMongoIdInObject(book);
+    return replaceMongoIdInObject(item);
   } catch (error) {
-    console.error("Error fetching Books:", error);
-    return [];
+    console.error("Error fetching item:", error);
+    return null;
   }
 };

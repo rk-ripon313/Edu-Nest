@@ -1,14 +1,14 @@
 import { itemInfoColumns } from "@/app/dashboard/components/ItemInfoColumns";
 import ItemOverviewCard from "@/app/dashboard/components/ItemOverviewCard";
 import ItemsInfoTable from "@/app/dashboard/components/ItemsInfoTable";
-import { getEducatorBookInfobyId } from "@/database/queries/dashboard-data";
+import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 
 const BookDetailsPage = async ({ params: { bookId } }) => {
   const user = await getCurrentUser();
   if (!user || user.role !== "educator") return <p>Access Denied</p>;
 
-  const book = await getEducatorBookInfobyId(bookId, user?.id, true);
+  const book = await getEducatorItemInfobyId("Book", bookId, user?.id, true);
   if (!book) return <p>Book not found or access denied</p>;
   // console.log(book.student);
 

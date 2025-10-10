@@ -1,5 +1,5 @@
 import { getUniqueCategories } from "@/database/queries/categories-data";
-import { getEducatorBookInfobyId } from "@/database/queries/dashboard-data";
+import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import BookHeaderControls from "../../components/BookHeaderControls";
 import CategoryForm from "../../components/CategoryForm";
@@ -13,7 +13,7 @@ const EditBookPage = async ({ params: { bookId } }) => {
   const user = await getCurrentUser();
   if (!user || user.role !== "educator") return <p>Access Denied</p>;
 
-  const book = await getEducatorBookInfobyId(bookId, user?.id);
+  const book = await getEducatorItemInfobyId("Book", bookId, user?.id);
   if (!book) {
     return (
       <div className="max-w-4xl mx-auto p-6">

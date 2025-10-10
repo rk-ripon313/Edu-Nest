@@ -1,4 +1,4 @@
-import { getEducatorBooks } from "@/database/queries/dashboard-data";
+import { getEducatorItems } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import { bookColumns } from "./components/BookColumns";
 import BooksTable from "./components/BooksTable";
@@ -7,7 +7,7 @@ const BookListPage = async () => {
   const user = await getCurrentUser();
   if (!user || user.role !== "educator") return <p>Access Denied</p>;
 
-  const books = await getEducatorBooks(user?.id, true);
+  const books = await getEducatorItems("Book", user?.id, true);
   // console.log({ books });
 
   return (
