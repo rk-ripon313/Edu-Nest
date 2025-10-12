@@ -155,7 +155,7 @@ export default function StudySeriesForm({ categories }) {
       setTags([]);
       setThumbnail(null);
 
-      router.push(`/dashboard/study-series/edit/${res.seriesId}`);
+      router.push(`/dashboard/study-series/${res.seriesId}/edit`);
     } catch (err) {
       toast.error(err?.message || "Something went wrong!");
     }
