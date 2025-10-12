@@ -21,7 +21,7 @@ import { studySeriesSchema } from "@/lib/validators/studySeries-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImageIcon } from "lucide-react";
 
-export default function StudySeriesForm({ categories }) {
+const StudySeriesForm = ({ categories }) => {
   const router = useRouter();
 
   const [thumbnail, setThumbnail] = useState(null);
@@ -390,4 +390,5 @@ export default function StudySeriesForm({ categories }) {
       </Button>
     </form>
   );
-}
+};
+export default StudySeriesForm;
