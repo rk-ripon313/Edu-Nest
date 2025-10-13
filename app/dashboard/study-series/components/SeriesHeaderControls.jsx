@@ -51,7 +51,7 @@ const SeriesHeaderControls = ({ studySeries }) => {
 
       if (dbRes.success) {
         toast.success(dbRes.message);
-        router.push("/dashboard/study-seriess");
+        router.push("/dashboard/study-series");
         router.refresh();
       } else {
         toast.error(dbRes.message);
