@@ -9,7 +9,6 @@ const chapterSchema = new Schema(
     slug: {
       required: true,
       type: String,
-      unique: true,
     },
     description: {
       type: String,
