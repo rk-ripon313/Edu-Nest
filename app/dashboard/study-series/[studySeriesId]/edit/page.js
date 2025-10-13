@@ -1,7 +1,9 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUniqueCategories } from "@/database/queries/categories-data";
 import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import SeriesHeaderControls from "../../components/SeriesHeaderControls";
+import SeriesOverviewTab from "../../components/SeriesOverviewTab";
 
 const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
   const user = await getCurrentUser();
@@ -12,7 +14,6 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
     studySeriesId,
     user?.id
   );
-  // console.log({ studySeries });
 
   if (!studySeries) {
     return (
@@ -43,6 +44,36 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
         </div>
         <SeriesHeaderControls studySeries={studySeries} />
       </div>
+
+      <Tabs defaultValue="overview" className="">
+        <TabsList className="mx-4 my-2 rounded-md shadow-sm bg-muted dark:bg-slate-800 ">
+          <TabsTrigger
+            value="overview"
+            className="text-sm font-sora px-3 py-2 rounded-md transition-colors
+                 data-[state=active]:bg-primary data-[state=active]:text-white
+                 hover:bg-primary/20"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="curriculum"
+            className="text-sm font-sora px-3 py-2 rounded-md transition-colors
+                 data-[state=active]:bg-primary data-[state=active]:text-white
+                 hover:bg-primary/20"
+          >
+            Curriculum
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab contents overview + curriculum */}
+        <TabsContent value="overview">
+          <SeriesOverviewTab studySeries={studySeries} />
+        </TabsContent>
+
+        <TabsContent value="curriculum">
+          {/* Curriculum content here */}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
