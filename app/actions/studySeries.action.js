@@ -3,10 +3,13 @@
 import { getACategory } from "@/database/queries/categories-data";
 import { slugify } from "@/lib/formetData";
 import { getCurrentUser } from "@/lib/session";
+import { ChapterModel } from "@/models/chapter-model";
+import { LessonModel } from "@/models/lesson-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
+// Validate that the given category (label, group, subject, part) exists in the database
 export const validateSeriesCategory = async ({
   label,
   group,
@@ -28,6 +31,7 @@ export const validateSeriesCategory = async ({
   }
 };
 
+// Create a new Study Series document in the database
 export const createStudySeries = async ({
   title,
   description,
@@ -73,6 +77,96 @@ export const createStudySeries = async ({
     return {
       success: false,
       message: `Could not added new Study-Series: ${error?.message}`,
+    };
+  }
+};
+
+// Update (edit) an existing Study Series by ID
+export const updateStudySeries = async (studySeriesId, dataToUpdate) => {
+  try {
+    await dbConnect();
+
+    const { category, ...rest } = dataToUpdate;
+
+    const updateData = {
+      ...rest,
+      ...(category && {
+        category: new mongoose.Types.ObjectId(category),
+      }),
+    };
+
+    const updatedStudySeries = await StudySeriesModel.findByIdAndUpdate(
+      studySeriesId,
+      updateData,
+      {
+        new: true,
+        lean: true,
+      }
+    );
+
+    if (!updatedStudySeries) {
+      return { success: false, message: "Study-Series not found" };
+    }
+
+    return {
+      success: true,
+      message: "Study-Series updated successfully",
+      data: updatedStudySeries,
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: e?.message || "Something went wrong",
+    };
+  }
+};
+
+// Delete a Study Series and all its related Chapters and Lessons
+export const deleteStudySeries = async (studySeriesId) => {
+  try {
+    await dbConnect();
+
+    // 1 Find the Study Series document by ID
+    const series = await StudySeriesModel.findById(studySeriesId)
+      .select("chapters")
+      .lean();
+
+    if (!series) {
+      return { success: false, message: "Study series not found" };
+    }
+
+    // 2 Retrieve all related chapters (from embedded array or fallback query)
+    const chapterIds = series.chapters?.length
+      ? series.chapters
+      : (
+          await ChapterModel.find({
+            studySeries: new mongoose.Types.ObjectId(studySeriesId),
+          })
+            .select("_id")
+            .lean()
+        ).map((ch) => ch._id);
+
+    // 3 Delete all lessons under those chapters, then delete the chapters themselves
+    if (chapterIds.length > 0) {
+      await LessonModel.deleteMany({ chapter: { $in: chapterIds } });
+      await ChapterModel.deleteMany({ _id: { $in: chapterIds } });
+    }
+
+    // 4  Finally, delete the Study Series document
+    const deleted = await StudySeriesModel.findByIdAndDelete(studySeriesId);
+    if (!deleted) {
+      return { success: false, message: "Series not found or already deleted" };
+    }
+
+    return {
+      success: true,
+      message:
+        "Study series and all related chapters & lessons deleted successfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: e?.message || "Something went wrong while deleting study series",
     };
   }
 };
