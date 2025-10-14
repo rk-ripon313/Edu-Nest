@@ -15,7 +15,7 @@ const StudySeriesSchema = new Schema(
     subject: { type: String },
 
     chapters: [{ type: Schema.Types.ObjectId, ref: "Chapter" }],
-    outComes: [{ type: String }],
+    outcomes: [{ type: String }],
     tags: [{ type: String }],
     overviewVideo: { type: String },
 
