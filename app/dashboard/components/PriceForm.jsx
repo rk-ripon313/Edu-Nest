@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { updateBook } from "@/app/actions/boook.action";
 import { updateStudySeries } from "@/app/actions/studySeries.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ const priceSchema = z.object({
     .min(0, "Price cannot be negative"),
 });
 
-const SeriesPriceForm = ({ price = 0, studySeriesId }) => {
+const PriceForm = ({ price = 0, itemId, onModel }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -39,16 +40,17 @@ const SeriesPriceForm = ({ price = 0, studySeriesId }) => {
 
   const onSubmit = async (values) => {
     try {
-      const result = await updateStudySeries(studySeriesId, {
-        price: values?.price,
-      });
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const result = await updateAction(itemId, { price: values?.price });
 
       if (result?.success) {
         toggleEdit();
+        toast.success(result?.message || "Price has been updated.");
         router.refresh();
-        toast.success(result.message || "Study-Series price has been updated.");
       } else {
-        toast.error(result.message || "Something went wrong");
+        toast.error(result?.message || "Something went wrong");
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
@@ -56,7 +58,7 @@ const SeriesPriceForm = ({ price = 0, studySeriesId }) => {
   };
 
   return (
-    <div className="mt-2  p-4">
+    <div className="p-4">
       <div className="font-medium flex items-center justify-between">
         Price
         <Button variant="ghost" onClick={toggleEdit} className="border">
@@ -77,7 +79,7 @@ const SeriesPriceForm = ({ price = 0, studySeriesId }) => {
           <Input
             type="number"
             {...register("price", { valueAsNumber: true })}
-            placeholder="Enter Study-Series price"
+            placeholder="Enter book price"
           />
           {errors.price && (
             <p className="text-red-500 text-sm">{errors.price.message}</p>
@@ -92,4 +94,4 @@ const SeriesPriceForm = ({ price = 0, studySeriesId }) => {
     </div>
   );
 };
-export default SeriesPriceForm;
+export default PriceForm;

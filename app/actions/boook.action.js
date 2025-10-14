@@ -8,6 +8,7 @@ import { slugify } from "@/lib/formetData";
 import { BookModel } from "@/models/book-model";
 import mongoose from "mongoose";
 
+// Validate that the given category (label, group, subject, part) exists in the database
 export const validateCategory = async ({ label, group, subject, part }) => {
   try {
     const category = await getACategory({ label, group, subject, part });
@@ -17,7 +18,6 @@ export const validateCategory = async ({ label, group, subject, part }) => {
     }
     return {
       success: true,
-      message: "Book created successfully",
       categoryId: category.id,
     };
   } catch (error) {
@@ -25,6 +25,7 @@ export const validateCategory = async ({ label, group, subject, part }) => {
   }
 };
 
+// Create a new Book document in the database
 export const AddaNewBook = async ({
   title,
   description,
@@ -69,7 +70,8 @@ export const AddaNewBook = async ({
   }
 };
 
-export const updateABook = async (bookId, dataToUpdate) => {
+// Update (edit) an existing Books by ID
+export const updateBook = async (bookId, dataToUpdate) => {
   try {
     await dbConnect();
 
@@ -104,7 +106,8 @@ export const updateABook = async (bookId, dataToUpdate) => {
   }
 };
 
-export const deleteABook = async (bookId) => {
+// Delete a Book
+export const deleteBook = async (bookId) => {
   try {
     await dbConnect();
     const res = await BookModel.findByIdAndDelete(bookId);

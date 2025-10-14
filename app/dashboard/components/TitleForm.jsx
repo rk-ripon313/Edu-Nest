@@ -3,22 +3,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { updateABook } from "@/app/actions/boook.action";
+import { updateBook } from "@/app/actions/boook.action";
+import { updateStudySeries } from "@/app/actions/studySeries.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { slugify } from "@/lib/formetData";
 import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const priceSchema = z.object({
-  price: z
-    .number({ invalid_type_error: "Price must be a number" })
-    .min(0, "Price cannot be negative"),
+const titleSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title cannot exceed 100 characters"),
 });
 
-const PriceForm = ({ price = 0, bookId }) => {
+const TitleForm = ({ title = "", itemId, onModel }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -31,22 +34,26 @@ const PriceForm = ({ price = 0, bookId }) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(priceSchema),
+    resolver: zodResolver(titleSchema),
     defaultValues: {
-      price,
+      title,
     },
   });
 
   const onSubmit = async (values) => {
     try {
-      const result = await updateABook(bookId, { price: values?.price });
+      const slug = slugify(values?.title);
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const result = await updateAction(itemId, { title: values?.title, slug });
 
       if (result?.success) {
         toggleEdit();
+        toast.success(result?.message || "Title has been updated.");
         router.refresh();
-        toast.success(result.message || "Book price has been updated.");
       } else {
-        toast.error(result.message || "Something went wrong");
+        toast.error(result?.message || "Something went wrong");
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
@@ -54,31 +61,27 @@ const PriceForm = ({ price = 0, bookId }) => {
   };
 
   return (
-    <div className="mt-6  p-4">
+    <div className="p-4">
       <div className="font-medium flex items-center justify-between">
-        Book price
+        Title
         <Button variant="ghost" onClick={toggleEdit} className="border">
           {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="h-4 w-4 mr-2" />
-              Edit price
+              Edit
             </>
           )}
         </Button>
       </div>
-      {!isEditing && <p className="text-sm mt-2">{price}</p>}
+      {!isEditing && <p className="text-sm mt-2">{title}</p>}
 
       {isEditing && (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
-          <Input
-            type="number"
-            {...register("price", { valueAsNumber: true })}
-            placeholder="Enter book price"
-          />
-          {errors.price && (
-            <p className="text-red-500 text-sm">{errors.price.message}</p>
+          <Input {...register("title")} placeholder="Enter book title" />
+          {errors.title && (
+            <p className="text-red-500 text-sm">{errors.title.message}</p>
           )}
           <div className="flex items-center gap-x-2">
             <Button disabled={isSubmitting} type="submit">
@@ -90,4 +93,4 @@ const PriceForm = ({ price = 0, bookId }) => {
     </div>
   );
 };
-export default PriceForm;
+export default TitleForm;

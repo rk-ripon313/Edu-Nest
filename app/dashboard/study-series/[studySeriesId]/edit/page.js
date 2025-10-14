@@ -1,7 +1,7 @@
+import ItemHeaderControls from "@/app/dashboard/components/ItemHeaderControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
-import SeriesHeaderControls from "../../components/SeriesHeaderControls";
 import SeriesOverviewTab from "../../components/SeriesOverviewTab";
 
 const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
@@ -32,14 +32,14 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
   // console.log({ studySeries });
 
   return (
-    <div className=" rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="rounded-lg shadow-sm border border-gray-200 ">
       {/* Header */}
       <div className="flex items-center justify-between  px-6 py-4">
         <div>
           <h1 className="text-2xl font-bold font-grotesk">Edit Study Series</h1>
           <p className=" mt-1">Manage your study Series information</p>
         </div>
-        <SeriesHeaderControls studySeries={studySeries} />
+        <ItemHeaderControls item={studySeries} onModel="StudySeries" />
       </div>
 
       <Tabs defaultValue="overview" className="">

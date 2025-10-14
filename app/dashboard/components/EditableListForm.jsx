@@ -1,6 +1,7 @@
 "use client";
 
-import { updateABook } from "@/app/actions/boook.action";
+import { updateBook } from "@/app/actions/boook.action";
+import { updateStudySeries } from "@/app/actions/studySeries.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Plus, X } from "lucide-react";
@@ -8,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const EditableListForm = ({ items = [], type, bookId }) => {
+const EditableListForm = ({ items = [], type, itemId, onModel }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [list, setList] = useState(items);
@@ -53,12 +54,16 @@ const EditableListForm = ({ items = [], type, bookId }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const result = await updateABook(bookId, { [type]: list });
+
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const result = await updateAction(itemId, { [type]: list });
 
       if (result?.success) {
         toggleEdit();
+        toast.success(result.message || `${type} has been updated.`);
         router.refresh();
-        toast.success(result.message || `Book ${type} has been updated.`);
       } else {
         toast.error(result.message || "Something went wrong");
       }
@@ -70,10 +75,10 @@ const EditableListForm = ({ items = [], type, bookId }) => {
   };
 
   return (
-    <div className="mt-6 p-4  ">
+    <div className="p-4">
       {/* Header */}
       <div className="font-medium flex items-center justify-between">
-        {`Book ${type} `}
+        {type}
 
         {isEditing ? (
           <Button
@@ -90,7 +95,7 @@ const EditableListForm = ({ items = [], type, bookId }) => {
           </Button>
         ) : (
           <Button variant="ghost" onClick={toggleEdit} className="border">
-            <Pencil className="h-4 w-4 mr-2" /> Edit {type}{" "}
+            <Pencil className="h-4 w-4 mr-2" /> Edit
           </Button>
         )}
       </div>

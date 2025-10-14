@@ -1,13 +1,15 @@
+import CategoryForm from "@/app/dashboard/components/CategoryForm";
+import DescriptionForm from "@/app/dashboard/components/DescriptionForm";
+import EditableListForm from "@/app/dashboard/components/EditableListForm";
+import ItemHeaderControls from "@/app/dashboard/components/ItemHeaderControls";
+import PdfForm from "@/app/dashboard/components/PdfForm";
+import PriceForm from "@/app/dashboard/components/PriceForm";
+import ThumbnailForm from "@/app/dashboard/components/ThumbnailForm";
+import TitleForm from "@/app/dashboard/components/TitleForm";
+
 import { getUniqueCategories } from "@/database/queries/categories-data";
 import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
-import BookHeaderControls from "../../components/BookHeaderControls";
-import CategoryForm from "../../components/CategoryForm";
-import DescriptionForm from "../../components/DescriptionForm";
-import EditableListForm from "../../components/EditableListForm";
-import FileForm from "../../components/FileForm";
-import PriceForm from "../../components/PriceForm";
-import TitleForm from "../../components/TitleForm";
 
 const EditBookPage = async ({ params: { bookId } }) => {
   const user = await getCurrentUser();
@@ -33,55 +35,76 @@ const EditBookPage = async ({ params: { bookId } }) => {
   // console.log({ book });
 
   return (
-    <div className=" rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="rounded-lg shadow-sm border border-gray-200 ">
       {/* Header */}
       <div className="flex items-center justify-between  px-6 py-4">
         <div>
           <h1 className="text-2xl font-bold font-grotesk">Edit Book</h1>
           <p className=" mt-1">Manage your book information</p>
         </div>
-        <BookHeaderControls book={book} />
+        <ItemHeaderControls item={book} onModel="Book" />
       </div>
 
       {/* Book Edit Form */}
       <div className="bg-white dark:bg-slate-950">
         {/* Basic Information */}
-        <div className="px-6 py-4  border-b border-gray-200">
-          <h2 className="text-lg font-semibold ">Basic Information</h2>
+        <div className="px-6 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">Basic Info</h2>
 
-          <TitleForm title={book?.title} bookId={book?.id} />
-          <DescriptionForm description={book?.description} bookId={book?.id} />
-          <PriceForm price={book?.price} bookId={book?.id} />
+          <TitleForm title={book?.title} itemId={book?.id} onModel="Book" />
+          <DescriptionForm
+            description={book?.description}
+            itemId={book?.id}
+            onModel="Book"
+          />
+          <PriceForm price={book?.price} itemId={book?.id} onModel="Book" />
         </div>
 
         {/* Category Information */}
-        <div className="px-6 py-4  border-b border-gray-200">
-          <h2 className="text-lg font-semibold ">Category</h2>
+        <div className="px-6 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold ">Category Info</h2>
 
           <CategoryForm
             category={book.category}
             categories={categories}
-            bookId={book?.id}
+            itemId={book?.id}
+            onModel="Book"
           />
         </div>
 
         {/* Additional Information */}
-        <div className="px-6 py-4  border-b border-gray-200">
+        <div className="px-6 py-3 border-b border-gray-200">
           <h2 className="text-lg font-semibold ">Additional Info</h2>
 
           <EditableListForm
             items={book?.outcomes}
             type="outcomes"
-            bookId={book?.id}
+            itemId={book?.id}
+            onModel="Book"
           />
-          <EditableListForm items={book?.tags} type="tags" bookId={book?.id} />
+
+          <EditableListForm
+            items={book?.tags}
+            type="tags"
+            itemId={book?.id}
+            onModel="Book"
+          />
         </div>
 
         {/* File Information */}
-        <div className="px-6 py-4  border-b border-gray-200">
+        <div className="px-6 py-3  border-b border-gray-200">
           <h2 className="text-lg font-semibold ">File Info</h2>
 
-          <FileForm book={book} />
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Thumbnail */}
+            <ThumbnailForm
+              thumbnailUrl={book?.thumbnail}
+              itemId={book?.id}
+              onModel="Book"
+            />
+            {/* PDF File Section  (read-only) */}
+            <PdfForm title={book?.title} fileUrl={book?.fileUrl} />
+          </div>
         </div>
       </div>
     </div>

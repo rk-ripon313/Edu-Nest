@@ -1,5 +1,6 @@
 "use client";
 
+import { deleteBook, updateBook } from "@/app/actions/boook.action";
 import {
   deleteStudySeries,
   updateStudySeries,
@@ -20,38 +21,50 @@ import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-const SeriesHeaderControls = ({ studySeries }) => {
+const ItemHeaderControls = ({ item, onModel }) => {
   const router = useRouter();
 
   const handleTogglePublish = async () => {
     try {
-      const dbRes = await updateStudySeries(studySeries.id, {
-        isPublished: !studySeries?.isPublished,
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const dbRes = await updateAction(item.id, {
+        isPublished: !item?.isPublished,
       });
 
       if (dbRes.success) {
-        toast.success(dbRes.message);
+        toast.success(dbRes?.message);
         router.refresh();
       } else {
         toast.error(dbRes?.message);
       }
     } catch (error) {
-      toast.error(error?.message || "studySeries Data Updated Failed!");
+      toast.error(error?.message || "Item Data Updated Failed!");
     }
   };
 
   const handleDelete = async () => {
     try {
-      if (studySeries?.isPublished) {
-        toast.error("Unpublish the studySeries before delete.");
+      if (item?.isPublished) {
+        toast.error("Unpublish the item before deleting.");
         return;
       }
 
-      const dbRes = await deleteStudySeries(studySeries?.id);
+      const deleteAction =
+        onModel === "StudySeries" ? deleteStudySeries : deleteBook;
+
+      const dbRes = await deleteAction(item?.id);
 
       if (dbRes.success) {
         toast.success(dbRes.message);
-        router.push("/dashboard/study-series");
+
+        router.push(
+          onModel === "StudySeries"
+            ? "/dashboard/study-series"
+            : "/dashboard/books"
+        );
+
         router.refresh();
       } else {
         toast.error(dbRes.message);
@@ -64,7 +77,7 @@ const SeriesHeaderControls = ({ studySeries }) => {
   return (
     <div className="flex items-center gap-3">
       {/* Publish / Unpublish */}
-      {studySeries?.isPublished ? (
+      {item?.isPublished ? (
         //  Unpublish -> Confirmation dialog
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -74,9 +87,9 @@ const SeriesHeaderControls = ({ studySeries }) => {
           </AlertDialogTrigger>
           <AlertDialogContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
             <AlertDialogHeader>
-              <AlertDialogTitle>Unpublish this studySeries?</AlertDialogTitle>
+              <AlertDialogTitle>Unpublish this item?</AlertDialogTitle>
               <AlertDialogDescription>
-                Students will no longer see this study-Series in the library.
+                Students will no longer see this item in the library.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -93,13 +106,13 @@ const SeriesHeaderControls = ({ studySeries }) => {
           onClick={handleTogglePublish}
           variant="default"
           size="sm"
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
         >
-          <Eye className="w-4 h-4 text-white" /> Publish
+          <Eye className="w-4 h-4 " /> Publish
         </Button>
       )}
 
-      {/* Delete studySeries  */}
+      {/* Delete item  */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
@@ -113,9 +126,9 @@ const SeriesHeaderControls = ({ studySeries }) => {
         </AlertDialogTrigger>
         <AlertDialogContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this studySeries?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The studySeries will be permanently
+              This action cannot be undone. The item will be permanently
               removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -133,4 +146,4 @@ const SeriesHeaderControls = ({ studySeries }) => {
     </div>
   );
 };
-export default SeriesHeaderControls;
+export default ItemHeaderControls;

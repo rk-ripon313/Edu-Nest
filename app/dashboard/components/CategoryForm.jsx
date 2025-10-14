@@ -1,6 +1,6 @@
 "use client";
 
-import { validateCategory } from "@/app/actions/boook.action";
+import { updateBook, validateCategory } from "@/app/actions/boook.action";
 import { updateStudySeries } from "@/app/actions/studySeries.action";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ const categorySchema = z.object({
   part: z.string().optional(),
 });
 
-const SeriesCategoryForm = ({ category, categories, studySeriesId }) => {
+const CategoryForm = ({ category, categories, itemId, onModel }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -51,14 +51,17 @@ const SeriesCategoryForm = ({ category, categories, studySeriesId }) => {
         return;
       }
 
-      const result = await updateStudySeries(studySeriesId, {
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const result = await updateAction(itemId, {
         category: category.categoryId,
       });
 
       if (result?.success) {
         toggleEdit();
+        toast.success(result?.message || "Category has been updated.");
         router.refresh();
-        toast.success(result?.message || " Category has been updated.");
       } else {
         toast.error(result?.message || "Something went wrong");
       }
@@ -68,7 +71,7 @@ const SeriesCategoryForm = ({ category, categories, studySeriesId }) => {
   };
 
   return (
-    <div className="mt-2 p-4">
+    <div className="p-4">
       <div className="flex items-center justify-between">
         <div>
           <div className="mt-2 p-3 bg-blue-50 dark:bg-slate-900 rounded-md text-sm text-blue-700">
@@ -191,4 +194,4 @@ const SeriesCategoryForm = ({ category, categories, studySeriesId }) => {
     </div>
   );
 };
-export default SeriesCategoryForm;
+export default CategoryForm;

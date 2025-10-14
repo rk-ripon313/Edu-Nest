@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { updateABook } from "@/app/actions/boook.action";
+import { updateBook } from "@/app/actions/boook.action";
+import { updateStudySeries } from "@/app/actions/studySeries.action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
@@ -19,7 +20,7 @@ const descriptionSchema = z.object({
     .max(2000, "Description cannot exceed 2000 characters"),
 });
 
-const DescriptionForm = ({ description = "", bookId }) => {
+const DescriptionForm = ({ description = "", itemId, onModel }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -40,16 +41,19 @@ const DescriptionForm = ({ description = "", bookId }) => {
 
   const onSubmit = async (values) => {
     try {
-      const result = await updateABook(bookId, {
+      const updateAction =
+        onModel === "StudySeries" ? updateStudySeries : updateBook;
+
+      const result = await updateAction(itemId, {
         description: values?.description,
       });
 
       if (result?.success) {
         toggleEdit();
+        toast.success(result?.message || "Description has been updated.");
         router.refresh();
-        toast.success(result.message || "Book description has been updated.");
       } else {
-        toast.error(result.message || "Something went wrong");
+        toast.error(result?.message || "Something went wrong");
       }
     } catch (error) {
       toast.error(error?.message || "Something went wrong");
@@ -57,16 +61,16 @@ const DescriptionForm = ({ description = "", bookId }) => {
   };
 
   return (
-    <div className="mt-6  p-4">
+    <div className="p-4">
       <div className="font-medium flex items-center justify-between">
-        Book description
+        Description
         <Button variant="ghost" onClick={toggleEdit} className="border">
           {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="h-4 w-4 mr-2" />
-              Edit description
+              Edit
             </>
           )}
         </Button>
