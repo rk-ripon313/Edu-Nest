@@ -1,5 +1,4 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getUniqueCategories } from "@/database/queries/categories-data";
 import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
 import SeriesHeaderControls from "../../components/SeriesHeaderControls";
@@ -29,8 +28,6 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
       </div>
     );
   }
-
-  const categories = await getUniqueCategories();
 
   // console.log({ studySeries });
 
