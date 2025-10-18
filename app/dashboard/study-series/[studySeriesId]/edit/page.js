@@ -2,6 +2,7 @@ import ItemHeaderControls from "@/app/dashboard/components/ItemHeaderControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEducatorItemInfobyId } from "@/database/queries/dashboard-data";
 import { getCurrentUser } from "@/lib/session";
+import SeriesCurriculumTab from "../../components/SeriesCurriculumTab";
 import SeriesOverviewTab from "../../components/SeriesOverviewTab";
 
 const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
@@ -29,7 +30,7 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
     );
   }
 
-  // console.log({ studySeries });
+  //console.log({ studySeries });
 
   return (
     <div className="rounded-lg shadow-sm border border-gray-200 ">
@@ -42,7 +43,7 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
         <ItemHeaderControls item={studySeries} onModel="StudySeries" />
       </div>
 
-      <Tabs defaultValue="overview" className="">
+      <Tabs defaultValue="curriculum" className="">
         <TabsList className="mx-4 my-2 rounded-md shadow-sm bg-muted dark:bg-slate-800 ">
           <TabsTrigger
             value="overview"
@@ -68,7 +69,11 @@ const EditStudySeriesPage = async ({ params: { studySeriesId } }) => {
         </TabsContent>
 
         <TabsContent value="curriculum">
-          {/* Curriculum content here */}
+          <SeriesCurriculumTab
+            chapters={studySeries?.chapters}
+            title={studySeries?.title}
+            studySeriesId={studySeries?.id}
+          />
         </TabsContent>
       </Tabs>
     </div>
