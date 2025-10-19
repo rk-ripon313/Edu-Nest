@@ -26,14 +26,37 @@ const SeriesCurriculumTab = ({
     setChapterList(chapters);
   }, [chapters]);
 
+  // reorder helper
+  const reorder = (list, startIndex, endIndex) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+
   // Handle drag end
   const onDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
+
+    const reordered = reorder(chapterList, source.index, destination.index);
+    setChapterList(reordered);
+
+    // Prepare order data for server
+    const orderData = reordered.map((chap, idx) => ({
+      id: chap._id,
+      order: idx + 1, // order starts from 1
+    }));
+
+    // try {
+    //   await updateChapterOrder(studySeriesId, orderData);
+    // } catch (error) {
+    //   console.error("Failed to update chapter order:", error);
+    // }
   };
 
   return (
-    <div className="min-h-[70vh] bg-background border rounded-lg ">
+    <>
       {/* Header */}
       <div className="bg-white dark:bg-slate-950 flex items-center justify-between px-6 py-4 border-b">
         <h2 className="text-lg font-semibold">{title}</h2>
@@ -41,52 +64,54 @@ const SeriesCurriculumTab = ({
       </div>
 
       {/* Chapter List */}
-      {chapterList.length ? (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="all-chapters" type="CHAPTER">
-            {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="space-y-4 p-6"
-              >
-                {chapterList.map((chapter, index) => {
-                  const chapterId = chapter._id.toString();
-                  return (
-                    <Draggable
-                      key={chapterId}
-                      draggableId={chapterId}
-                      index={index}
-                    >
-                      {(prov) => (
-                        <div
-                          ref={prov.innerRef}
-                          {...prov.draggableProps}
-                          className="bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:shadow-md transition-all"
-                        >
+      <div className="p-3 border rounded-lg overflow-x-hidden overflow-y-auto ">
+        {chapterList.length ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="all-chapters" type="CHAPTER">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  // className="p-6"
+                >
+                  {chapterList.map((chapter, index) => {
+                    const chapterId = chapter._id.toString();
+                    return (
+                      <Draggable
+                        key={chapterId}
+                        draggableId={chapterId}
+                        index={index}
+                      >
+                        {(prov) => (
                           <Accordion
                             type="single"
                             collapsible
                             defaultValue={index === 0 ? chapterId : ""}
-                            className="rounded-md"
+                            ref={prov.innerRef}
+                            {...prov.draggableProps}
+                            className="my-3 overflow-hidden bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:shadow-md transition-all"
                           >
-                            <AccordionItem value={chapterId}>
-                              {/* Chapter Header */}
-                              <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                                <div className="flex items-center justify-between w-full">
-                                  <div className="flex items-center gap-3">
+                            <AccordionItem
+                              value={chapterId}
+                              className="p-4 overflow-hidden"
+                            >
+                              {/*Chapter Header AccordionTrigger wrapper */}
+                              <div className="relative w-full">
+                                <AccordionTrigger className="px-4 py-2 w-full flex items-center gap-3 hover:no-underline">
+                                  {/* Left side: Drag handle + Title + Badges */}
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
                                     <div
                                       className="px-2 py-3 border-r border-r-slate-200 hover:bg-slate-300 dark:hover:bg-gray-800 rounded-l-md"
                                       {...prov.dragHandleProps}
                                     >
                                       <Grip className="h-5 w-5" />
                                     </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <h3 className="font-medium text-sm md:text-base">
+                                    <div className="flex flex-col gap-1 min-w-0 overflow-hidden">
+                                      <h3 className="font-medium text-sm md:text-base truncate">
                                         {chapter.title}
                                       </h3>
-                                      <div className="flex items-center gap-2">
+
+                                      <div className="flex items-center gap-2 flex-wrap">
                                         <span
                                           className={`px-2 py-0.5 text-xs font-medium rounded-md ${
                                             chapter.isPublished
@@ -112,14 +137,16 @@ const SeriesCurriculumTab = ({
                                       </div>
                                     </div>
                                   </div>
+                                </AccordionTrigger>
 
-                                  {/* Chapter quick actions */}
+                                {/* Right side: QuickActions absolute */}
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2">
                                   <ChapterQuickActions
                                     chapter={chapter}
                                     studySeriesId={studySeriesId}
                                   />
                                 </div>
-                              </AccordionTrigger>
+                              </div>
 
                               {/* Lessons List */}
                               <LessonList
@@ -128,20 +155,20 @@ const SeriesCurriculumTab = ({
                               />
                             </AccordionItem>
                           </Accordion>
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      ) : (
-        <Empty title="No chapters added yet." />
-      )}
-    </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          <Empty title="No chapters added yet." />
+        )}
+      </div>
+    </>
   );
 };
 
