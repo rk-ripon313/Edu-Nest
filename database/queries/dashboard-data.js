@@ -62,12 +62,10 @@ export const getEducatorItemInfobyId = async (
         .populate({
           path: "chapters",
           model: ChapterModel,
-          select: "title  order lessonIds",
           options: { sort: { order: 1 } },
           populate: {
             path: "lessonIds",
             model: LessonModel,
-            select: "title  duration isPreview videoUrl  order",
             options: { sort: { order: 1 } },
           },
         })
