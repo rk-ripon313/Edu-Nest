@@ -1,6 +1,5 @@
 "use client";
 
-import { reOrderChapters } from "@/app/actions/chapter.actions";
 import Empty from "@/components/Empty";
 import {
   Accordion,
@@ -11,7 +10,6 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Grip } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import ChapterEditorDialog from "./ChapterEditorDialog";
 import ChapterQuickActions from "./ChapterQuickActions";
 import LessonList from "./LessonList";
@@ -51,17 +49,17 @@ const SeriesCurriculumTab = ({
     }));
 
     // call server action
-    try {
-      const res = await reOrderChapters(bulkUpdateData, studySeriesId);
-      if (res?.success) {
-        toast.success(res.message || "Chapter order updated!");
-        refresh();
-      } else {
-        toast.error(res?.message || "Failed to update chapter order");
-      }
-    } catch (error) {
-      toast.error("Failed to update chapter order");
-    }
+    // try {
+    //   const res = await reOrderChapters(bulkUpdateData, studySeriesId);
+    //   if (res?.success) {
+    //     toast.success(res.message || "Chapter order updated!");
+    //     refresh();
+    //   } else {
+    //     toast.error(res?.message || "Failed to update chapter order");
+    //   }
+    // } catch (error) {
+    //   toast.error("Failed to update chapter order");
+    // }
   };
 
   return (
