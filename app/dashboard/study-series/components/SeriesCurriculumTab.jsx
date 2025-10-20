@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/accordion";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Grip } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChapterEditorDialog from "./ChapterEditorDialog";
 import ChapterQuickActions from "./ChapterQuickActions";
@@ -21,44 +20,38 @@ const SeriesCurriculumTab = ({
 }) => {
   // Local state for chapters
   const [chapterList, setChapterList] = useState(chapters);
-  const { refresh } = useRouter();
+
   // Sync with fresh props whenever chapters prop changes
   useEffect(() => {
     setChapterList(chapters);
   }, [chapters]);
+
+  // reorder helper
+  const reorder = (list, startIndex, endIndex) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
 
   // Handle drag end
   const onDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
 
-    const reordered = Array.from(chapterList);
-    const [removed] = reordered.splice(source.index, 1);
-    reordered.splice(destination.index, 0, removed);
-
-    const startIndex = Math.min(source.index, destination.index);
-    const endIndex = Math.max(source.index, destination.index);
-
-    const updatedChapters = reordered.slice(startIndex, endIndex + 1);
-
+    const reordered = reorder(chapterList, source.index, destination.index);
     setChapterList(reordered);
 
-    const bulkUpdateData = updatedChapters.map((chapter) => ({
-      id: chapter._id,
-      position: reordered.findIndex((item) => item._id === chapter._id) + 1, //  convert 0-based to 1-based
+    // Prepare order data for server
+    const orderData = reordered.map((chap, idx) => ({
+      id: chap._id,
+      order: idx + 1, // order starts from 1
     }));
 
-    // call server action
     // try {
-    //   const res = await reOrderChapters(bulkUpdateData, studySeriesId);
-    //   if (res?.success) {
-    //     toast.success(res.message || "Chapter order updated!");
-    //     refresh();
-    //   } else {
-    //     toast.error(res?.message || "Failed to update chapter order");
-    //   }
+    //   await updateChapterOrder(studySeriesId, orderData);
     // } catch (error) {
-    //   toast.error("Failed to update chapter order");
+    //   console.error("Failed to update chapter order:", error);
     // }
   };
 
