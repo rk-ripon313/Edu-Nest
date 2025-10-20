@@ -101,6 +101,33 @@ export const updateChapter = async (chapterId, data) => {
   }
 };
 
+//update chapters orders
+
+// data Structure
+//    [   { id: "66577a9b91726a7429e0r5t6", position: 0 },
+//        { id: "66577a4a91726a7429e0r6t9", position: 1 },
+//        { id: "66577a9091726a7429e0r1t1", position: 2 }  ]
+
+export const reOrderChapters = async (data, studySeriesId) => {
+  try {
+    await dbConnect();
+
+    await Promise.all(
+      data.map(async (item) => {
+        await ChapterModel.findByIdAndUpdate(item.id, {
+          order: item.position,
+        });
+      })
+    );
+
+    revalidatePath(`/dashboard/study-series/${studySeriesId}/edit`);
+
+    return { success: true, message: "Chapters reordered successfully" };
+  } catch (e) {
+    return { success: false, message: "Failed to update chapter order" };
+  }
+};
+
 //  Delete a chapter along with all its lessons
 //  and remove the chapter reference from StudySeries
 
