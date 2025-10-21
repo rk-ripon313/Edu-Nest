@@ -37,7 +37,6 @@ const chapterSchema = new Schema(
       {
         type: Schema.ObjectId,
         ref: "Lesson",
-        required: true,
       },
     ],
     order: {
