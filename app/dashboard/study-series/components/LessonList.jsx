@@ -3,90 +3,106 @@
 import { AccordionContent } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Draggable, Droppable } from "@hello-pangea/dnd";
-import { EyeOff, Grip, Pencil, Plus, Trash, Upload } from "lucide-react";
+import { formatDuration } from "@/lib/formetData";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { Grip, Plus } from "lucide-react";
+import { toast } from "sonner";
+import LessonQuickActions from "./LessonQuickActions";
 
 const LessonList = ({ lessons, chapterId }) => {
+  const hasLessons = lessons && lessons.length > 0;
+
+  const onLessonDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    //  reOrderLessons()
+    toast.message("Lesson reordered within chapter:");
+  };
+
   return (
-    <AccordionContent>
-      {lessons?.length ? (
-        <Droppable droppableId={chapterId} type="LESSON">
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className="p-3 space-y-2"
-            >
-              {lessons.map((lesson, index) => (
-                <Draggable
-                  key={lesson._id}
-                  draggableId={lesson._id}
-                  index={index}
+    <AccordionContent className="bg-slate-50 dark:bg-slate-900 rounded-b-lg transition-all">
+      {hasLessons ? (
+        <>
+          <DragDropContext onDragEnd={onLessonDragEnd}>
+            <Droppable droppableId={chapterId} type="LESSON">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="p-3 space-y-2"
                 >
-                  {(prov) => (
-                    <div
-                      ref={prov.innerRef}
-                      {...prov.draggableProps}
-                      className="flex items-center justify-between bg-light_bg dark:bg-dark_bg border rounded-md p-3"
+                  {lessons.map((lesson, index) => (
+                    <Draggable
+                      key={lesson._id}
+                      draggableId={lesson._id}
+                      index={index}
                     >
-                      <div className="flex items-center gap-3">
+                      {(prov) => (
                         <div
-                          className="p-2 rounded-l-md hover:shadow-md hover:scale-105"
-                          {...prov.dragHandleProps}
+                          ref={prov.innerRef}
+                          {...prov.draggableProps}
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3  p-3 bg-white dark:bg-slate-800
+                           border border-slate-200 dark:border-slate-700  rounded-xl shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200"
                         >
-                          <Grip className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{lesson.title}</p>
-                          <p className="text-xs text-gray-500">
-                            {lesson.duration} min{" "}
-                            {lesson.isPreview && "• Preview"}
-                          </p>
-                        </div>
-                      </div>
+                          {/* Left side: drag  info */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div
+                              className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 cursor-grab"
+                              {...prov.dragHandleProps}
+                            >
+                              <Grip className="h-4 w-4 opacity-70" />
+                            </div>
 
-                      <div className="flex items-center gap-2">
-                        {lesson.isPublished ? (
-                          <Badge>Published</Badge>
-                        ) : (
-                          <Badge variant="outline">Draft</Badge>
-                        )}
-                        <Button size="icon" variant="ghost" title="Edit Lesson">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Publish/Unpublish"
-                        >
-                          {lesson.isPublished ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Upload className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button size="icon" variant="ghost" title="Delete">
-                          <Trash className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm md:text-base truncate">
+                                {lesson.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {lesson.duration
+                                  ? formatDuration(lesson.duration) + " H"
+                                  : "No duration"}{" "}
+                                {lesson.isPreview && "• Preview"}
+                              </p>
+                            </div>
+
+                            {lesson.isPublished && (
+                              <Badge className="text-xs text-white px-1 py-0.5">
+                                Published
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Right side: status  actions */}
+                          <LessonQuickActions lesson={lesson} />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+          {/* add new lesson */}
+          <Button className="bg-accent hover:bg-green-600 text-white transition-all hover:scale-x-105 my-3 mx-4 w-full sm:w-auto flex items-center gap-2">
+            <Plus size={14} /> Add Lesson
+          </Button>
+        </>
       ) : (
-        <div>no lesson avilabe !</div>
+        <div className="py-8 flex flex-col items-center justify-center text-center">
+          <Button className="h-12 w-12 flex items-center justify-center mb-3 rounded-full bg-accent hover:bg-green-600  transition-all hover:scale-105 ">
+            <Plus className="text-white" />
+          </Button>
+          <h3 className="text-base font-medium text-slate-700 dark:text-slate-300">
+            No lessons yet
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Add your first lesson to this chapter.
+          </p>
+        </div>
       )}
-
-      <div className="px-3 pb-4">
-        <Button variant="outline" className="mt-2 flex items-center gap-2">
-          <Plus size={14} /> Add Lesson
-        </Button>
-      </div>
     </AccordionContent>
   );
 };
+
 export default LessonList;
