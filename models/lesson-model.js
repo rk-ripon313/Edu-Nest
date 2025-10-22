@@ -46,7 +46,18 @@ const lessonSchema = new Schema(
       type: Number,
     },
     resources: {
-      type: [String],
+      type: [
+        {
+          title: {
+            type: String,
+            required: true,
+          },
+          url: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
       default: [],
     },
   },
