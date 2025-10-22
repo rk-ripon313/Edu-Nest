@@ -6,11 +6,17 @@ import { Button } from "@/components/ui/button";
 import { formatDuration } from "@/lib/formetData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Grip, Plus } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import AddLessonModal from "./LessonEditorDialog";
 import LessonQuickActions from "./LessonQuickActions";
 
 const LessonList = ({ lessons, chapterId }) => {
   const hasLessons = lessons && lessons.length > 0;
+
+  const [openLessonDialog, setOpenLessonDialog] = useState(false);
+  //close the lessonModal fn
+  const onClose = () => setOpenLessonDialog(false);
 
   const onLessonDragEnd = (result) => {
     const { source, destination } = result;
@@ -84,13 +90,26 @@ const LessonList = ({ lessons, chapterId }) => {
             </Droppable>
           </DragDropContext>
           {/* add new lesson */}
-          <Button className="bg-accent hover:bg-green-600 text-white transition-all hover:scale-x-105 my-3 mx-4 w-full sm:w-auto flex items-center gap-2">
+          <Button
+            onClick={() => setOpenLessonDialog(true)}
+            className="bg-accent hover:bg-green-600 text-white transition-all hover:scale-x-105 my-3 mx-4 w-full sm:w-auto flex items-center gap-2"
+          >
             <Plus size={14} /> Add Lesson
           </Button>
+
+          {/* Add Lesson Modal */}
+          <AddLessonModal
+            open={openLessonDialog}
+            onClose={onClose}
+            chapterId={chapterId}
+          />
         </>
       ) : (
         <div className="py-8 flex flex-col items-center justify-center text-center">
-          <Button className="h-12 w-12 flex items-center justify-center mb-3 rounded-full bg-accent hover:bg-green-600  transition-all hover:scale-105 ">
+          <Button
+            className="h-12 w-12 flex items-center justify-center mb-3 rounded-full bg-accent hover:bg-green-600  transition-all hover:scale-105 "
+            onClick={() => setOpenLessonDialog(true)}
+          >
             <Plus className="text-white" />
           </Button>
           <h3 className="text-base font-medium text-slate-700 dark:text-slate-300">
@@ -99,6 +118,11 @@ const LessonList = ({ lessons, chapterId }) => {
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Add your first lesson to this chapter.
           </p>
+          <AddLessonModal
+            open={openLessonDialog}
+            onClose={onClose}
+            chapterId={chapterId}
+          />
         </div>
       )}
     </AccordionContent>
