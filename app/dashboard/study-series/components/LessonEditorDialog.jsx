@@ -66,7 +66,19 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
       setVideoFile(file);
-      setVideoPreview(URL.createObjectURL(file));
+
+      const fileUrl = URL.createObjectURL(file);
+      setVideoPreview(fileUrl);
+
+      //  Finding Duration by Temporary video
+      const tempVideo = document.createElement("video");
+      tempVideo.src = fileUrl;
+      tempVideo.preload = "metadata";
+
+      tempVideo.onloadedmetadata = () => {
+        setDuration(Math.floor(tempVideo.duration)); // seconds
+        URL.revokeObjectURL(tempVideo.src); // memory cleanup
+      };
     },
   });
 
@@ -91,6 +103,20 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
         toast.error("Video is requaired");
         return;
       }
+      const formData = new FormData();
+      formData.append("file", videoFile);
+      formData.append("title", data?.title);
+      formData.append("description", data?.description);
+
+      const res = await fetch("/api/upload-youtube", {
+        method: "POST",
+        body: formData,
+      });
+
+      const youtubeData = await res.json();
+      console.log({ youtubeData }, { duration });
+
+      // {videoUrl: 'https://www.youtube.com/watch?v=ADjZGNq2RJI'}
 
       // handle server action after sometime . -
     } catch (error) {
