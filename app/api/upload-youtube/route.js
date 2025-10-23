@@ -4,18 +4,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 
 export const POST = async (req) => {
-  const uploadDir = path.join(process.cwd(), "tmp");
-  let tempPath = null;
-
   try {
-    //  Ensure tmp folder exists
-    try {
-      await fs.mkdir(uploadDir, { recursive: true });
-    } catch (err) {
-      console.error("Failed to create tmp directory:", err);
-      throw err;
-    }
-
     //  Parse formData
     const formData = await req.formData();
     const file = formData.get("file");
@@ -41,14 +30,15 @@ export const POST = async (req) => {
     //  Check file size (400MB limit)
     const MAX_SIZE = 400 * 1024 * 1024;
     if (buffer.byteLength > MAX_SIZE) {
-      return new Response(
-        JSON.stringify({ error: "File too large. Max 400MB allowed." }),
+      return NextResponse.json(
+        { success: false, message: "File too large. Max 400MB allowed." },
         { status: 400 }
       );
     }
 
     ////  Write temp file
-    tempPath = path.join(uploadDir, `upload_${Date.now()}_${file.name}`);
+    const uploadDir = "/tmp";
+    const tempPath = path.join(uploadDir, `upload_${Date.now()}_${file.name}`);
     await fs.writeFile(tempPath, buffer);
 
     // Setup OAuth2 client
@@ -81,12 +71,14 @@ export const POST = async (req) => {
     // Get duration with retry
     // const duration = await getVideoDurationWithRetry(youtube, videoId);
 
+    //clean up temp file
+    await fs.unlink(tempPath);
+
     //  Return final  response
     return NextResponse.json(
       { success: true, message: " video uploaded !", data: videoUrl },
       { status: 200 }
     );
-    // catch block
   } catch (error) {
     console.error("YouTube Upload Error:", error);
 
@@ -94,9 +86,6 @@ export const POST = async (req) => {
       { success: false, message: error?.message || "Unknown error" },
       { status: 500 }
     );
-    //finally block
-  } finally {
-    if (tempPath) await fs.unlink(tempPath).catch(() => {});
   }
 };
 
