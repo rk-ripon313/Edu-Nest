@@ -86,7 +86,7 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
   const handleAddResource = () => {
     const { title, url } = newResource;
     if (!title.trim() || !url.trim()) {
-      toast.error("Please fill both title and URL");
+      toast.error("Please fill Resource both field title and URL");
       return;
     }
     setResources([...resources, newResource]);
@@ -96,7 +96,10 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
   const removeResource = (idx) =>
     setResources(resources.filter((_, i) => i !== idx));
 
-  //  Submit
+  // blob:https://edu-nest-edu.vercel.app/08b1e43a-4271-4133-b4af-7469340259ce:1
+  //  GET blob:https://edu-nest-edu.vercel.app/08b1e43a-4271-4133-b4af-7469340259ce net::ERR_FILE_NOT_FOUND
+
+  // Handle Form  Submit...
   const onSubmit = async (data) => {
     try {
       if (!videoFile) {
@@ -108,13 +111,17 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
       formData.append("title", data?.title);
       formData.append("description", data?.description);
 
-      const res = await fetch("/api/upload-youtube", {
+      // const res = await fetch("/api/upload-youtube", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+      const externalRes = await fetch("https://upload-youtube.vercel.app/", {
         method: "POST",
         body: formData,
       });
 
-      const youtubeData = await res.json();
-      console.log({ youtubeData }, { duration });
+      const externalData = await externalRes.json();
+      console.log({ externalData }, { duration });
 
       // {videoUrl: 'https://www.youtube.com/watch?v=ADjZGNq2RJI'}
 
