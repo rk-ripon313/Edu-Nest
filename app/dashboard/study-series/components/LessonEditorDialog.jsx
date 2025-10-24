@@ -1,9 +1,11 @@
 "use client";
 
+import { createLesson } from "@/app/actions/lesson.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,12 +32,10 @@ const lessonSchema = z.object({
   isPublished: z.boolean(),
 });
 
-const LessonEditorDialog = ({ open, onClose, onSaved }) => {
+const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
   //  Video upload states
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
-
-  const [videoUrl, setVideoUrl] = useState("");
   const [duration, setDuration] = useState(null);
 
   //  Resource states
@@ -64,20 +64,36 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
     accept: { "video/*": [] },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
+      if (!acceptedFiles.length) return;
       const file = acceptedFiles[0];
+
+      const MAX_FILE_SIZE = 400 * 1024 * 1024; // 400MB
+      //Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("Video size must be under 400MB");
+        return;
+      }
+
+      // revoke previous blob URL safely
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+
       setVideoFile(file);
 
+      // create new blob URL for preview
       const fileUrl = URL.createObjectURL(file);
       setVideoPreview(fileUrl);
 
-      //  Finding Duration by Temporary video
+      // create temp video to extract duration
       const tempVideo = document.createElement("video");
-      tempVideo.src = fileUrl;
       tempVideo.preload = "metadata";
+      tempVideo.src = fileUrl;
 
       tempVideo.onloadedmetadata = () => {
-        setDuration(Math.floor(tempVideo.duration)); // seconds
-        URL.revokeObjectURL(tempVideo.src); // memory cleanup
+        setDuration(Math.floor(tempVideo.duration));
+        // detach temp video src
+        tempVideo.src = "";
       };
     },
   });
@@ -85,8 +101,20 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
   //  Add new resource
   const handleAddResource = () => {
     const { title, url } = newResource;
+
     if (!title.trim() || !url.trim()) {
-      toast.error("Please fill Resource both field title and URL");
+      toast.error("Please fill both title and URL");
+      return;
+    }
+    // Title length check (example: 5 chars max)
+    if (title.trim().length > 10) {
+      toast.error("Title must be at most 10 characters");
+      return;
+    }
+    // URL validation
+    const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
+    if (!urlPattern.test(url.trim())) {
+      toast.error("Please enter a valid URL");
       return;
     }
     setResources([...resources, newResource]);
@@ -96,9 +124,6 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
   const removeResource = (idx) =>
     setResources(resources.filter((_, i) => i !== idx));
 
-  // blob:https://edu-nest-edu.vercel.app/08b1e43a-4271-4133-b4af-7469340259ce:1
-  //  GET blob:https://edu-nest-edu.vercel.app/08b1e43a-4271-4133-b4af-7469340259ce net::ERR_FILE_NOT_FOUND
-
   // Handle Form  Submit...
   const onSubmit = async (data) => {
     try {
@@ -106,26 +131,46 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
         toast.error("Video is requaired");
         return;
       }
+
       const formData = new FormData();
       formData.append("file", videoFile);
       formData.append("title", data?.title);
       formData.append("description", data?.description);
 
-      // const res = await fetch("/api/upload-youtube", {
-      //   method: "POST",
-      //   body: formData,
-      // });
+      // const res = await fetch("/api/upload-youtube", { method: "POST",body: formData});
       const externalRes = await fetch("https://upload-youtube.vercel.app/", {
         method: "POST",
         body: formData,
       });
 
       const externalData = await externalRes.json();
-      console.log({ externalData }, { duration });
 
-      // {videoUrl: 'https://www.youtube.com/watch?v=ADjZGNq2RJI'}
+      if (!externalData.success || !externalData.videoUrl) {
+        toast.error(externalData?.message || "Video Uplood Failed! Try Again");
+        return;
+      }
+      const videoUrl = externalData.videoUrl; // {videoUrl: 'https://www.youtube.com/watch?v=ADjZGNq2RJI'}
 
-      // handle server action after sometime . -
+      // Call Server Action For Createing A new Lesson
+      const res = await createLesson({
+        data,
+        resources,
+        duration,
+        videoUrl,
+        chapterId,
+      });
+
+      if (res.success) {
+        toast.success(res?.message);
+        reset();
+        setResources([]);
+        setVideoFile(null);
+        setVideoPreview(null);
+        setDuration(0);
+        onSaved();
+      } else {
+        toast.error(res?.message);
+      }
     } catch (error) {
       toast.error(error?.message || "Failed! ");
     }
@@ -133,11 +178,14 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-full bg-slate-50 dark:bg-slate-950 p-6 sm:p-10 overflow-y-auto max-h-[95vh] rounded-2xl shadow-lg">
+      <DialogContent className="relative max-w-5xl w-full bg-slate-50 dark:bg-slate-950 px-6 sm:px-10 overflow-y-auto max-h-[95vh] rounded-2xl shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             Add New Lesson
           </DialogTitle>
+          <DialogDescription>
+            Fill out the lesson details and upload a video to save.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -278,8 +326,8 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
           </div>
 
           {/*  Actions */}
-          <div className="flex justify-end gap-4 pt-4">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-4 pt-2.5">
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
@@ -290,6 +338,15 @@ const LessonEditorDialog = ({ open, onClose, onSaved }) => {
               Save Lesson
             </Button>
           </div>
+          {/*  overlay */}
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-2xl overflow-hidden">
+              <div className="text-white text-lg font-semibold mb-4">
+                Uploading video...
+              </div>
+              <div className="w-16 h-16 border-4 border-white dark:border-black border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

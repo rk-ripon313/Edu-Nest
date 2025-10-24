@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatDuration } from "@/lib/formetData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Grip, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import AddLessonModal from "./LessonEditorDialog";
@@ -14,9 +15,15 @@ import LessonQuickActions from "./LessonQuickActions";
 const LessonList = ({ lessons, chapterId }) => {
   const hasLessons = lessons && lessons.length > 0;
 
+  const router = useRouter();
   const [openLessonDialog, setOpenLessonDialog] = useState(false);
+
   //close the lessonModal fn
   const onClose = () => setOpenLessonDialog(false);
+  const onSaved = () => {
+    setOpenLessonDialog(false);
+    router.refresh();
+  };
 
   const onLessonDragEnd = (result) => {
     const { source, destination } = result;
@@ -79,7 +86,10 @@ const LessonList = ({ lessons, chapterId }) => {
                           </div>
 
                           {/* Right side: status  actions */}
-                          <LessonQuickActions lesson={lesson} />
+                          <LessonQuickActions
+                            lesson={lesson}
+                            onSaved={onSaved}
+                          />
                         </div>
                       )}
                     </Draggable>
@@ -102,6 +112,7 @@ const LessonList = ({ lessons, chapterId }) => {
             open={openLessonDialog}
             onClose={onClose}
             chapterId={chapterId}
+            onSaved={onSaved}
           />
         </>
       ) : (
@@ -122,6 +133,7 @@ const LessonList = ({ lessons, chapterId }) => {
             open={openLessonDialog}
             onClose={onClose}
             chapterId={chapterId}
+            onSaved={onSaved}
           />
         </div>
       )}
