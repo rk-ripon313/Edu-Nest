@@ -9,7 +9,8 @@ import { Grip, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import AddLessonModal from "./LessonEditorDialog";
+
+import LessonEditorDialog from "./LessonEditorDialog";
 import LessonQuickActions from "./LessonQuickActions";
 
 const LessonList = ({ lessons, chapterId }) => {
@@ -86,10 +87,7 @@ const LessonList = ({ lessons, chapterId }) => {
                           </div>
 
                           {/* Right side: status  actions */}
-                          <LessonQuickActions
-                            lesson={lesson}
-                            onSaved={onSaved}
-                          />
+                          <LessonQuickActions lesson={lesson} />
                         </div>
                       )}
                     </Draggable>
@@ -108,7 +106,7 @@ const LessonList = ({ lessons, chapterId }) => {
           </Button>
 
           {/* Add Lesson Modal */}
-          <AddLessonModal
+          <LessonEditorDialog
             open={openLessonDialog}
             onClose={onClose}
             chapterId={chapterId}
@@ -129,7 +127,7 @@ const LessonList = ({ lessons, chapterId }) => {
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Add your first lesson to this chapter.
           </p>
-          <AddLessonModal
+          <LessonEditorDialog
             open={openLessonDialog}
             onClose={onClose}
             chapterId={chapterId}

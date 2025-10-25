@@ -7,6 +7,7 @@ import { LessonModel } from "@/models/lesson-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
+// Creates a new Lesson
 export const createLesson = async ({
   data,
   resources,
@@ -76,5 +77,69 @@ export const createLesson = async ({
       success: false,
       message: error?.message || "Something went wrong",
     };
+  }
+};
+
+// Update an existing Lesson:
+export const updateLesson = async (data) => {
+  try {
+    await dbConnect();
+
+    // If title changed → regenerate slug
+    if (data?.title) {
+      data.slug = slugify(data.title);
+    }
+
+    // Update the document
+    const updated = await LessonModel.findByIdAndUpdate(
+      data.lessonId,
+      { $set: data },
+      { new: true }
+    );
+    if (!updated) {
+      return { success: false, message: "Lesson not found" };
+    }
+
+    return { success: true, message: "Lesson updated successfully" };
+  } catch (error) {
+    console.error("Update Lesson Error:", error);
+    return { success: false, message: "Server error updating Lesson" };
+  }
+};
+
+//  Delete lesson and remove the lessonId reference from Chapter
+export const deleteLesson = async (lessonId) => {
+  try {
+    await dbConnect();
+
+    // Find the lesson first
+    const lesson = await LessonModel.findById(lessonId);
+    if (!lesson) {
+      return { success: false, message: "Lesson not found" };
+    }
+
+    const chapterId = lesson.chapter.toString();
+
+    // Delete the lesson itself
+    const deletedLesson = await LessonModel.findByIdAndDelete(lessonId);
+    if (!deletedLesson) {
+      return {
+        success: false,
+        message: "Lesson could not be deleted or not found",
+      };
+    }
+
+    // Remove lesson ID from chapter.lessonIds array
+    await ChapterModel.findByIdAndUpdate(chapterId, {
+      $pull: { lessonIds: lesson._id },
+    });
+
+    return {
+      success: true,
+      message: "Lesson deleted successfully",
+    };
+  } catch (error) {
+    console.error("Delete Lesson Error:", error);
+    return { success: false, message: "Server error deleting lesson" };
   }
 };

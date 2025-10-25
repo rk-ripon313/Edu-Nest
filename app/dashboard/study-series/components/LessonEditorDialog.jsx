@@ -1,6 +1,6 @@
 "use client";
 
-import { createLesson } from "@/app/actions/lesson.actions";
+import { createLesson, updateLesson } from "@/app/actions/lesson.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/Spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,14 +33,22 @@ const lessonSchema = z.object({
   isPublished: z.boolean(),
 });
 
-const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
+const LessonEditorDialog = ({
+  open,
+  onClose,
+  chapterId,
+  lesson = null,
+  onSaved,
+}) => {
+  const isEditMode = !!lesson;
+
   //  Video upload states
   const [videoFile, setVideoFile] = useState(null);
-  const [videoPreview, setVideoPreview] = useState(null);
-  const [duration, setDuration] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(lesson?.videoUrl || null);
+  const [duration, setDuration] = useState(lesson?.duration || 0);
 
   //  Resource states
-  const [resources, setResources] = useState([]);
+  const [resources, setResources] = useState(lesson?.resources || []);
   const [newResource, setNewResource] = useState({ title: "", url: "" });
 
   const {
@@ -52,10 +61,10 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
   } = useForm({
     resolver: zodResolver(lessonSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      isPreview: false,
-      isPublished: false,
+      title: lesson?.title || "",
+      description: lesson?.description || "",
+      isPreview: lesson?.isPreview || false,
+      isPublished: lesson?.isPublished || false,
     },
   });
 
@@ -63,6 +72,8 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "video/*": [] },
     maxFiles: 1,
+    disabled: isEditMode, // disable in edit mode
+
     onDrop: (acceptedFiles) => {
       if (!acceptedFiles.length) return;
       const file = acceptedFiles[0];
@@ -124,41 +135,53 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
   const removeResource = (idx) =>
     setResources(resources.filter((_, i) => i !== idx));
 
-  // Handle Form  Submit...
+  // Handle Form Submit...
   const onSubmit = async (data) => {
     try {
-      if (!videoFile) {
-        toast.error("Video is requaired");
+      if (!isEditMode && !videoFile) {
+        toast.error("Video is required");
         return;
       }
 
-      const formData = new FormData();
-      formData.append("file", videoFile);
-      formData.append("title", data?.title);
-      formData.append("description", data?.description);
+      let res = {};
 
-      // const res = await fetch("/api/upload-youtube", { method: "POST",body: formData});
-      const externalRes = await fetch("https://upload-youtube.vercel.app/", {
-        method: "POST",
-        body: formData,
-      });
-
-      const externalData = await externalRes.json();
-
-      if (!externalData.success || !externalData.videoUrl) {
-        toast.error(externalData?.message || "Video Uplood Failed! Try Again");
-        return;
+      //  EDIT EXISTING LESSON
+      if (isEditMode) {
+        const editPayload = { ...data, resources, lessonId: lesson?._id };
+        res = await updateLesson(editPayload);
       }
-      const videoUrl = externalData.videoUrl; // {videoUrl: 'https://www.youtube.com/watch?v=ADjZGNq2RJI'}
+      //  CREATE NEW LESSON
+      else {
+        const formData = new FormData();
+        formData.append("file", videoFile);
+        formData.append("title", data.title);
+        formData.append("description", data.description);
 
-      // Call Server Action For Createing A new Lesson
-      const res = await createLesson({
-        data,
-        resources,
-        duration,
-        videoUrl,
-        chapterId,
-      });
+        // Upload to external API
+        // const uploadRes = await fetch("/api/upload-youtube", { method: "POST",body: formData});
+        const uploadRes = await fetch("https://upload-youtube.vercel.app/", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+
+        if (!uploadData.success || !uploadData.videoUrl) {
+          toast.error(uploadData?.message || "Video upload failed!");
+          return;
+        }
+
+        const videoUrl = uploadData.videoUrl;
+
+        res = await createLesson({
+          data,
+          resources,
+          duration,
+          videoUrl,
+          chapterId,
+        });
+      }
+
+      // RESPONSE HANDLING
 
       if (res.success) {
         toast.success(res?.message);
@@ -172,19 +195,22 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
         toast.error(res?.message);
       }
     } catch (error) {
-      toast.error(error?.message || "Failed! ");
+      toast.error(error?.message || "Failed!");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="relative max-w-5xl w-full bg-slate-50 dark:bg-slate-950 px-6 sm:px-10 overflow-y-auto max-h-[95vh] rounded-2xl shadow-lg">
+      <DialogContent className=" max-w-5xl w-full bg-slate-50 dark:bg-slate-950 px-6 sm:px-10 overflow-y-auto max-h-[95vh] rounded-2xl shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
-            Add New Lesson
+            {isEditMode ? "Edit Lesson" : "Add New Lesson"}
           </DialogTitle>
+
           <DialogDescription>
-            Fill out the lesson details and upload a video to save.
+            {isEditMode
+              ? "Update your lesson details below."
+              : "Create a new lesson by filling out the form below."}
           </DialogDescription>
         </DialogHeader>
 
@@ -239,31 +265,57 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
             {/*  Video Upload */}
             <div>
               <Label>Lesson Video</Label>
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition flex items-center justify-center min-h-[200px] ${
-                  isDragActive
-                    ? "border-green-500 bg-green-50 dark:bg-black"
-                    : "border-gray-300 dark:border-gray-700"
-                }`}
-              >
-                <input {...getInputProps()} />
-                {videoPreview ? (
+              {!isEditMode ? (
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex items-center justify-center min-h-[200px] ${
+                    isDragActive
+                      ? "border-green-500 bg-green-50 dark:bg-black"
+                      : "border-gray-300 dark:border-gray-700"
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  {videoPreview ? (
+                    <div className="relative w-full max-w-[500px] aspect-video overflow-hidden rounded-lg shadow">
+                      <video
+                        src={videoPreview}
+                        controls
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      {isDragActive
+                        ? "Drop the video here ..."
+                        : "Drag & drop a video file here, or click to select"}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="min-h-[200px]">
                   <div className="relative w-full max-w-[500px] aspect-video overflow-hidden rounded-lg shadow">
-                    <video
-                      src={videoPreview}
-                      controls
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
+                    <iframe
+                      src={
+                        videoPreview.includes("watch?v=")
+                          ? videoPreview.replace("watch?v=", "embed/")
+                          : videoPreview.includes("youtu.be/")
+                            ? videoPreview.replace(
+                                "youtu.be/",
+                                "www.youtube.com/embed/"
+                              )
+                            : videoPreview
+                      }
+                      className="absolute inset-0 w-full h-full rounded-lg"
+                      title="Lesson Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
                   </div>
-                ) : (
-                  <p className="text-gray-500">
-                    {isDragActive
-                      ? "Drop the video here ..."
-                      : "Drag & drop a video file here, or click to select"}
+                  <p className="text-sm text-muted-foreground text-center pt-2">
+                    🎬 Original content cannot be changed.
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -332,21 +384,18 @@ const LessonEditorDialog = ({ open, onClose, chapterId, onSaved }) => {
             </Button>
             <Button
               type="submit"
-              className="bg-accent hover:bg-green-600 text-white"
+              className="bg-accent hover:bg-green-600 text-white disabled:bg-green-300 disabled:hover:bg-none
+              outline-1 disabled:outline-red-500 font-semibold font-sora"
               disabled={isSubmitting}
             >
-              Save Lesson
+              {isSubmitting && <Spinner className="ml-2" />}{" "}
+              {isSubmitting
+                ? "Saving..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create Lesson"}
             </Button>
           </div>
-          {/*  overlay */}
-          {isSubmitting && (
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-2xl overflow-hidden">
-              <div className="text-white text-lg font-semibold mb-4">
-                Uploading video...
-              </div>
-              <div className="w-16 h-16 border-4 border-white dark:border-black border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
         </form>
       </DialogContent>
     </Dialog>
