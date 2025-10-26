@@ -14,14 +14,15 @@ import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/Spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadFileToCloudinary } from "@/lib/upload";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
+import ReactPlayer from "react-player";
 import { toast } from "sonner";
 import { z } from "zod";
-
 //  form validation
 const lessonSchema = z.object({
   title: z
@@ -78,10 +79,10 @@ const LessonEditorDialog = ({
       if (!acceptedFiles.length) return;
       const file = acceptedFiles[0];
 
-      const MAX_FILE_SIZE = 400 * 1024 * 1024; // 400MB
+      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
       //Check file size
       if (file.size > MAX_FILE_SIZE) {
-        toast.error("Video size must be under 400MB");
+        toast.error("Video size must be under 20MB");
         return;
       }
 
@@ -112,22 +113,12 @@ const LessonEditorDialog = ({
   //  Add new resource
   const handleAddResource = () => {
     const { title, url } = newResource;
-
-    if (!title.trim() || !url.trim()) {
-      toast.error("Please fill both title and URL");
-      return;
-    }
-    // Title length check (example: 5 chars max)
-    if (title.trim().length > 10) {
-      toast.error("Title must be at most 10 characters");
-      return;
-    }
-    // URL validation
+    if (!title.trim() || !url.trim())
+      return toast.error("Fill both title & URL");
+    if (title.length > 10) return toast.error("Title max 10 chars");
     const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
-    if (!urlPattern.test(url.trim())) {
-      toast.error("Please enter a valid URL");
-      return;
-    }
+    if (!urlPattern.test(url)) return toast.error("Enter valid URL");
+
     setResources([...resources, newResource]);
     setNewResource({ title: "", url: "" });
   };
@@ -138,39 +129,24 @@ const LessonEditorDialog = ({
   // Handle Form Submit...
   const onSubmit = async (data) => {
     try {
-      if (!isEditMode && !videoFile) {
-        toast.error("Video is required");
-        return;
-      }
+      if (!isEditMode && !videoFile) return toast.error("Video is required");
 
       let res = {};
 
-      //  EDIT EXISTING LESSON
       if (isEditMode) {
-        const editPayload = { ...data, resources, lessonId: lesson?._id };
-        res = await updateLesson(editPayload);
-      }
-      //  CREATE NEW LESSON
-      else {
-        const formData = new FormData();
-        formData.append("file", videoFile);
-        formData.append("title", data.title);
-        formData.append("description", data.description);
-
+        res = await updateLesson({ ...data, resources, lessonId: lesson._id });
+      } else {
+        // const formData = new FormData(); //formData.append("file", videoFile); //formData.append("title", title);
         // Upload to external API
         // const uploadRes = await fetch("/api/upload-youtube", { method: "POST",body: formData});
-        const uploadRes = await fetch("https://upload-youtube.vercel.app/", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json();
+        // const uploadRes = await fetch("https://upload-youtube.vercel.app/", {method: "POST",body: formData,});
 
-        if (!uploadData.success || !uploadData.videoUrl) {
-          toast.error(uploadData?.message || "Video upload failed!");
-          return;
-        }
-
-        const videoUrl = uploadData.videoUrl;
+        const videoUrl = await uploadFileToCloudinary(
+          videoFile,
+          "video",
+          "series"
+        );
+        if (!videoUrl) return toast.error("Video upload failed!");
 
         res = await createLesson({
           data,
@@ -182,7 +158,6 @@ const LessonEditorDialog = ({
       }
 
       // RESPONSE HANDLING
-
       if (res.success) {
         toast.success(res?.message);
         reset();
@@ -191,9 +166,7 @@ const LessonEditorDialog = ({
         setVideoPreview(null);
         setDuration(0);
         onSaved();
-      } else {
-        toast.error(res?.message);
-      }
+      } else toast.error(res.message);
     } catch (error) {
       toast.error(error?.message || "Failed!");
     }
@@ -294,22 +267,15 @@ const LessonEditorDialog = ({
               ) : (
                 <div className="min-h-[200px]">
                   <div className="relative w-full max-w-[500px] aspect-video overflow-hidden rounded-lg shadow">
-                    <iframe
-                      src={
-                        videoPreview.includes("watch?v=")
-                          ? videoPreview.replace("watch?v=", "embed/")
-                          : videoPreview.includes("youtu.be/")
-                            ? videoPreview.replace(
-                                "youtu.be/",
-                                "www.youtube.com/embed/"
-                              )
-                            : videoPreview
-                      }
-                      className="absolute inset-0 w-full h-full rounded-lg"
-                      title="Lesson Video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
+                    <ReactPlayer
+                      src={videoPreview}
+                      controls
+                      width="100%"
+                      height="100%"
+                      config={{
+                        file: { attributes: { tabIndex: -1 } },
+                      }}
+                    />
                   </div>
                   <p className="text-sm text-muted-foreground text-center pt-2">
                     🎬 Original content cannot be changed.

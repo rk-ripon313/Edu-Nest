@@ -21,22 +21,28 @@ export const POST = async (req) => {
       );
     }
     const uploadedUrls = [];
+
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
 
       const result = await new Promise((resolve, reject) => {
-        cloudinary.uploader
+        const uploadOptions = {
+          folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
+          resource_type: fileType === "pdf" ? "raw" : "auto",
+          format: fileType === "pdf" ? "pdf" : undefined,
+          quality: "auto",
+          fetch_format: "auto",
+        };
 
-          .upload_stream(
-            {
-              folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
-              // resource_type: fileType === "pdf" ? "raw" : "image",
-              resource_type: "auto",
-              format: fileType === "pdf" ? "pdf" : undefined,
-              quality: "auto",
-              fetch_format: "auto",
-            },
-            (err, res) => (err ? reject(err) : resolve(res))
+        // if video, eager_async using background processing
+        if (fileType === "video") {
+          uploadOptions.eager = [{ width: 1280, height: 720, format: "mp4" }];
+          uploadOptions.eager_async = true;
+        }
+
+        cloudinary.uploader
+          .upload_stream(uploadOptions, (err, res) =>
+            err ? reject(err) : resolve(res)
           )
           .end(buffer);
       });
