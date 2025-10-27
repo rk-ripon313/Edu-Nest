@@ -29,9 +29,9 @@ export const POST = async (req) => {
         const uploadOptions = {
           folder: `Edu-Nest${subFolder ? `/${subFolder}` : ""}`,
           resource_type: fileType === "pdf" ? "raw" : "auto",
-          format: fileType === "pdf" ? "pdf" : undefined,
-          quality: "auto",
-          fetch_format: "auto",
+          // format: fileType === "pdf" ? "pdf" : undefined,
+          // quality: "auto",
+          // fetch_format: "auto",
         };
 
         // if video, eager_async using background processing
