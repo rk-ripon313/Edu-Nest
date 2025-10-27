@@ -33,7 +33,7 @@ const SeriesCurriculumTab = ({
   // Handle drag end
   const onDragEnd = async (result) => {
     const { source, destination } = result;
-    if (!destination) return;
+    if (!destination || source.index === destination.index) return;
 
     const reordered = Array.from(chapterList);
     const [removed] = reordered.splice(source.index, 1);

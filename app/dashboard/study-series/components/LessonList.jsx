@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { reOrderLessons } from "@/app/actions/lesson.actions";
 import LessonEditorDialog from "./LessonEditorDialog";
 import LessonQuickActions from "./LessonQuickActions";
 
@@ -26,11 +27,37 @@ const LessonList = ({ lessons, chapterId }) => {
     router.refresh();
   };
 
-  const onLessonDragEnd = (result) => {
+  // Handle drag end
+  const onLessonDragEnd = async (result) => {
     const { source, destination } = result;
-    if (!destination) return;
-    //  reOrderLessons()
-    toast.message("Lesson reordered within chapter:");
+    if (!destination || source.index === destination.index) return;
+
+    const reordered = Array.from(lessons);
+    const [removed] = reordered.splice(source.index, 1);
+    reordered.splice(destination.index, 0, removed);
+
+    const startIndex = Math.min(source.index, destination.index);
+    const endIndex = Math.max(source.index, destination.index);
+
+    const updatedLesson = reordered.slice(startIndex, endIndex + 1);
+    // setLessonList(reordered);
+    const bulkUpdateData = updatedLesson.map((lesson) => ({
+      id: lesson._id,
+      position: reordered.findIndex((item) => item._id === lesson._id) + 1, //  convert 0-based to 1-based
+    }));
+
+    // call server action
+    try {
+      const res = await reOrderLessons(bulkUpdateData);
+      if (res?.success) {
+        toast.success(res.message || "Lesson order updated!");
+        router.refresh();
+      } else {
+        toast.error(res?.message || "Failed to update lesson order");
+      }
+    } catch (error) {
+      toast.error("Failed to update lesson order");
+    }
   };
 
   return (
@@ -73,7 +100,7 @@ const LessonList = ({ lessons, chapterId }) => {
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {lesson.duration
-                                  ? formatDuration(lesson.duration) + " H"
+                                  ? formatDuration(lesson.duration)
                                   : "No duration"}{" "}
                                 {lesson.isPreview && "• Preview"}
                               </p>

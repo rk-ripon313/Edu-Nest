@@ -107,6 +107,26 @@ export const updateLesson = async (data) => {
   }
 };
 
+//update lessons orders
+
+export const reOrderLessons = async (data) => {
+  try {
+    await dbConnect();
+
+    await Promise.all(
+      data.map(async (item) => {
+        await LessonModel.findByIdAndUpdate(item.id, {
+          order: item.position,
+        });
+      })
+    );
+
+    return { success: true, message: "Lesson reordered within chapter" };
+  } catch (e) {
+    return { success: false, message: "Failed to update lessons order" };
+  }
+};
+
 //  Delete lesson and remove the lessonId reference from Chapter
 export const deleteLesson = async (lessonId) => {
   try {
