@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/Spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { uploadFileToCloudinary } from "@/lib/upload";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
@@ -79,10 +78,10 @@ const LessonEditorDialog = ({
       if (!acceptedFiles.length) return;
       const file = acceptedFiles[0];
 
-      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
       //Check file size
       if (file.size > MAX_FILE_SIZE) {
-        toast.error("Video size must be under 20MB");
+        toast.error("Video size must be under 100MB");
         return;
       }
 
@@ -136,17 +135,33 @@ const LessonEditorDialog = ({
       if (isEditMode) {
         res = await updateLesson({ ...data, resources, lessonId: lesson._id });
       } else {
-        // const formData = new FormData(); //formData.append("file", videoFile); //formData.append("title", title);
+        // handle create a new lesson
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset =
+          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_VIDEO;
+
+        if (!cloudName || !uploadPreset) {
+          toast.error("Cloudinary config missing in environment variables!");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", videoFile);
+        formData.append("upload_preset", uploadPreset);
+
         // Upload to external API
         // const uploadRes = await fetch("/api/upload-youtube", { method: "POST",body: formData});
         // const uploadRes = await fetch("https://upload-youtube.vercel.app/", {method: "POST",body: formData,});
-
-        const videoUrl = await uploadFileToCloudinary(
-          videoFile,
-          "video",
-          "series"
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          { method: "POST", body: formData }
         );
-        if (!videoUrl) return toast.error("Video upload failed!");
+
+        const cloudData = await uploadRes.json();
+
+        if (!cloudData || !cloudData.secure_url)
+          return toast.error("Video upload failed!");
+
+        const videoUrl = cloudData.secure_url;
 
         res = await createLesson({
           data,
