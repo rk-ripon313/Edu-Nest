@@ -5,9 +5,17 @@ import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import { FreeMode, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import Empty from "./Empty";
 import ItemCard from "./ItemCard";
 
-const SwiperSlider = ({ items, type }) => {
+const SwiperSlider = ({ items = [], type }) => {
+  if (items.length === 0) {
+    return (
+      <div className="flex justify-center items-center dark:bg-slate-800 bg-gray-300 rounded-xl">
+        <Empty title={"No related items found."} />
+      </div>
+    );
+  }
   return (
     <div className="relative ">
       <Swiper

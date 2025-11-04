@@ -141,7 +141,7 @@ export const getStudySeriesById = async (id) => {
       })
       .lean();
 
-    if (!series || !series?.isPublished) return {};
+    if (!series || !series?.isPublished) return;
 
     const enrichedSeries = await enrichItemDatabyId(series, "StudySeries");
 

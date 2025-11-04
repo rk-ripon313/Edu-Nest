@@ -118,7 +118,7 @@ export const getBookById = async (id) => {
       })
       .lean();
 
-    if (!book?.isPublished) return {};
+    if (!book || !book?.isPublished) return;
 
     const enrichedBook = await enrichItemDatabyId(book, "Book");
 
