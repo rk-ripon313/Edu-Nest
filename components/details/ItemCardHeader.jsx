@@ -5,7 +5,7 @@ import { BookOpen, List, StarIcon, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import ActionBtns from "./ActionBtns";
-const ItemCardHeader = ({ item, series }) => {
+const ItemCardHeader = ({ item, isSeries }) => {
   const name =
     item?.educator?.firstName && item?.educator?.lastName
       ? item.educator.firstName + " " + item.educator.lastName
@@ -16,7 +16,7 @@ const ItemCardHeader = ({ item, series }) => {
       <div className="md:w-1/3 relative bg-muted/50 p-6 flex items-center justify-center rounded-lg overflow-hidden aspect-[4/3] md:aspect-auto">
         {/* Book or Series Label */}
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-primary/90 text-white px-3 py-1.5 rounded-md shadow-md backdrop-blur-md">
-          {series ? (
+          {isSeries ? (
             <>
               <List className="w-4 h-4" />
               <span className="text-sm font-semibold tracking-wide">
@@ -108,7 +108,7 @@ const ItemCardHeader = ({ item, series }) => {
           price={item?.price}
           isOwner={item?.isOwner}
           isEnrolled={item?.isEnrolled}
-          series={series}
+          isSeries={isSeries}
         />
       </div>
     </div>

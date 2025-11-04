@@ -4,7 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { editYouTubeUrl, formatDuration } from "@/lib/formetData";
+import { formatDuration } from "@/lib/formetData";
 import { Clock, Lock, Play } from "lucide-react";
 import { TabsContent } from "../ui/tabs";
 import PlayPreviewVideo from "./PlayPreviewVideo";
@@ -54,9 +54,7 @@ const CurriculumTab = ({ chapters }) => {
                         🎬 {lesson.title}
                       </span>
                       {lesson.isPreview && (
-                        <PlayPreviewVideo
-                          videoUrl={editYouTubeUrl(lesson?.videoUrl)}
-                        />
+                        <PlayPreviewVideo videoUrl={lesson?.videoUrl} />
                       )}
                     </div>
 

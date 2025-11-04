@@ -17,29 +17,30 @@ import { revalidatePath } from "next/cache";
 
 const currency = "BDT";
 
-export const createCheckoutSessionAction = async ({ itemId, series }) => {
+export const createCheckoutSessionAction = async ({ itemId, isSeries }) => {
   if (!itemId) return { success: false, error: "ITEM_NOT_FOUND" };
 
   const user = await getCurrentUser();
   if (!user?.id || !user?.email) {
     return { success: false, error: "UNAUTHENTICATED" };
   }
+
   try {
     await dbConnect();
-
     const origin = process.env.NEXT_PUBLIC_BASE_URL;
 
-    const onModel = series ? "StudySeries" : "Book";
+    const onModel = isSeries ? "StudySeries" : "Book";
 
+    // Check existing enrollment
     const hasEnrollment = await getHasEnrollment(onModel, itemId);
-
     if (hasEnrollment) {
       return { success: false, error: "ALREADY_ENROLLED" };
     }
 
-    const enrollItem = series
+    // Fetch item info
+    const enrollItem = isSeries
       ? await StudySeriesModel.findById(itemId)
-          .select(" title price description thumbnail")
+          .select("title price description thumbnail")
           .populate({
             path: "educator",
             model: UserModel,
@@ -58,10 +59,11 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
     if (!enrollItem) {
       return { success: false, error: "ITEM_NOT_FOUND" };
     }
+
     const item = replaceMongoIdInObject(enrollItem);
 
+    // Free enrollment (no payment)
     if (item.price === 0) {
-      // Free item → DB save & return
       const freeEnrollment = await createNewEnrollment({
         student: new mongoose.Types.ObjectId(user?.id),
         onModel,
@@ -77,16 +79,19 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
       }
 
       revalidatePath(
-        series ? `/study-series/${item.id}` : `/books/${item?.id}`
+        isSeries ? `/study-series/${item.id}` : `/books/${item.id}`
       );
       revalidatePath("/");
+
       return {
         success: true,
-        message: "Congratulation! Now You may access this item",
+        message: "Congratulation! Now you may access this item",
       };
     }
 
+    // Paid checkout with Stripe
     const amount = formatAmountForStripe(item?.price, currency);
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       submit_type: "auto",
@@ -123,12 +128,8 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
           itemImage: item.thumbnail || "",
         },
       },
-
       success_url: `${origin}/enroll-success?session_id={CHECKOUT_SESSION_ID}&onModel=${onModel}&itemId=${item.id}`,
-
-      cancel_url: `${origin}/${
-        series ? `study-series/${item.id}` : `books/${item.id}`
-      }`,
+      cancel_url: `${origin}/${isSeries ? `study-series/${item.id}` : `books/${item.id}`}`,
     });
 
     return {
@@ -137,6 +138,6 @@ export const createCheckoutSessionAction = async ({ itemId, series }) => {
     };
   } catch (error) {
     console.error(error);
-    return { success: false, error: "Something Went Rong! Try again" };
+    return { success: false, error: "Something went wrong! Try again." };
   }
 };

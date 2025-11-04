@@ -53,7 +53,7 @@ const StudySeriesDetailsPage = async ({ params: { id } }) => {
   return (
     <>
       <ItemBreadcrumb subNav="study-series" title={series.title} />
-      <ItemDetails item={series} series />
+      <ItemDetails item={series} isSeries={true} />
 
       <Suspense fallback={<SectionLoadingFallback title="Review Section" />}>
         <ReviewSection itemId={id} onModel="StudySeries" />

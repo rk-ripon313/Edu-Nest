@@ -2,23 +2,30 @@
 
 import { createCheckoutSessionAction } from "@/app/actions/stripe.actions";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 
-const ActionBtns = ({ itemId, price, isOwner, isEnrolled, series }) => {
+const ActionBtns = ({ itemId, price, isOwner, isEnrolled, isSeries }) => {
+  const router = useRouter();
   const isFree = price === 0;
   const canEnroll = !isOwner && !isEnrolled;
 
   // URL after enrollment or for reading/playing
-  const enrolledUrl = series
+  const enrolledUrl = isSeries
     ? `/study-series/${itemId}/play`
     : `/books/${itemId}/read`;
+
+  // Edit URL for owner
+  const editUrl = isSeries
+    ? `/dashboard/study-series/${itemId}/edit`
+    : `/dashboard/books/${itemId}/edit`;
 
   // Handler for enroll button
   const handleEnroll = async () => {
     if (!canEnroll) return;
 
-    const res = await createCheckoutSessionAction({ itemId, series });
+    const res = await createCheckoutSessionAction({ itemId, isSeries });
     if (res?.success) {
       if (res?.url) {
         window.location.assign(res.url);
@@ -26,21 +33,31 @@ const ActionBtns = ({ itemId, price, isOwner, isEnrolled, series }) => {
     } else toast.error(res.error);
   };
 
+  // Handler for owned item (redirect to edit page)
+  const handleOwned = () => {
+    router.push(editUrl);
+  };
+
   return (
     <div className="flex gap-5">
+      {/* Wishlist button */}
       <Button disabled={isOwner} variant="outline">
         Add to Wishlist
       </Button>
 
-      {/* Enroll / Read / Play button */}
+      {/* Main action button */}
       {isOwner ? (
-        <Button disabled variant="default" title="You own this item">
-          Owned
+        <Button
+          variant="default"
+          onClick={handleOwned}
+          className="font-sora font-medium"
+        >
+          Edit {isSeries ? "Series" : "Book"}
         </Button>
       ) : isEnrolled ? (
         <Link href={enrolledUrl}>
           <Button variant="default" className="font-sora font-medium">
-            {series ? "Play Series" : "Read Book"}
+            {isSeries ? "Play Series" : "Read Book"}
           </Button>
         </Link>
       ) : (
@@ -50,7 +67,7 @@ const ActionBtns = ({ itemId, price, isOwner, isEnrolled, series }) => {
           className="font-sora font-medium"
           disabled={!canEnroll}
         >
-          {isFree ? "Enroll for Free" : `Enroll Now `}
+          {isFree ? "Enroll for Free" : "Enroll Now"}
         </Button>
       )}
     </div>

@@ -5,10 +5,10 @@ import CurriculumTab from "./CurriculumTab";
 import DescriptionTab from "./DescriptionTab";
 import ItemCardHeader from "./ItemCardHeader";
 import OverviewTab from "./OverviewTab";
-const ItemDetails = async ({ item, series = false }) => {
+const ItemDetails = async ({ item, isSeries = false }) => {
   return (
     <SectionWrapper>
-      <ItemCardHeader item={item} series={series} />
+      <ItemCardHeader item={item} isSeries={isSeries} />
       <Separator className="my-6" />
 
       {/* Tabs Section */}
@@ -27,7 +27,7 @@ const ItemDetails = async ({ item, series = false }) => {
             Description
           </TabsTrigger>
 
-          {series && item.chapters?.length > 0 && (
+          {isSeries && item.chapters?.length > 0 && (
             <TabsTrigger
               value="curriculum"
               className="data-[state=active]:bg-amber-400 data-[state=active]:font-semibold text-base "
@@ -44,7 +44,7 @@ const ItemDetails = async ({ item, series = false }) => {
           {/* description & Outcomes Tab */}
           <DescriptionTab item={item} />
           {/* chapters Tab */}
-          {series && item.chapters?.length > 0 && (
+          {isSeries && item.chapters?.length > 0 && (
             <CurriculumTab chapters={item?.chapters} />
           )}
         </div>
