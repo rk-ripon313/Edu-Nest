@@ -1,4 +1,4 @@
-import ReviewBtn from "@/components/details/ReviewBtn";
+import ReviewAction from "@/components/details/ReviewAction";
 import ReviewList from "@/components/details/ReviewList";
 import Empty from "@/components/Empty";
 import Spinner from "@/components/ui/Spinner";
@@ -66,8 +66,11 @@ const BookReadPage = async ({ params: { id } }) => {
         <PDFViewer fileUrl={book.fileUrl} />
 
         {/* Right (Review Section ) */}
-        <div className="lg:w-[40%] flex flex-col items-center  lg:items-start justify-center space-y-4  p-2">
-          <ReviewBtn onModel={"Book"} review={writedReview} itemId={id} />
+        <div
+          className="lg:w-[40%] flex flex-col items-center  lg:items-start justify-center space-y-4 
+          p-2 bg-white dark:bg-gray-800 shadow rounded-lg"
+        >
+          <ReviewAction onModel={"Book"} review={writedReview} itemId={id} />
           <ReviewList reviews={testimonials} isRead={true} />
         </div>
       </div>

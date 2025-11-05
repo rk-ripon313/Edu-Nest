@@ -1,6 +1,6 @@
 import Empty from "@/components/Empty";
 
-import ReviewBtn from "@/components/details/ReviewBtn";
+import ReviewAction from "@/components/details/ReviewAction";
 import Progress from "@/components/Progress";
 import { PlayProvider } from "@/context/PlayContext";
 import { getHasEnrollment } from "@/database/queries/enrollments-data";
@@ -51,13 +51,13 @@ const PlayPage = async ({ params: { id } }) => {
         </div>
         {/* Chapter list - 1/3 width on lg */}
         <div className="lg:col-span-1  bg-white dark:bg-gray-800 mb-1 rounded-md shadow-md">
-          <div className="py-2 px-2">
-            <ReviewBtn
-              onModel="StudySeries"
-              review={writedReview}
-              itemId={id}
-            />
-          </div>
+          {/* reviews CRUD */}
+          <ReviewAction
+            onModel="StudySeries"
+            review={writedReview}
+            itemId={id}
+          />
+
           {/* progress */}
           <div className="px-2 py-1">
             <h3 className="font-semibold font-grotesk">Your Progress.</h3>

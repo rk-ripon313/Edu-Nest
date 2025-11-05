@@ -60,3 +60,33 @@ export const addReviewAction = async ({
     };
   }
 };
+
+//delate review fn
+export const deleteReview = async ({ reviewId, onModel }) => {
+  try {
+    await dbConnect();
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: "Unauthorized request" };
+    }
+
+    // Check ownership and delete
+    const deleted = await TestimonialModel.findOneAndDelete({
+      _id: new mongoose.Types.ObjectId(reviewId),
+      student: new mongoose.Types.ObjectId(user.id),
+      onModel,
+    });
+
+    if (!deleted) {
+      return { success: false, error: "Review not found or not authorized" };
+    }
+
+    return { success: true, message: "Review deleted successfully" };
+  } catch (error) {
+    console.error("Review delete error:", error?.message);
+    return {
+      success: false,
+      error: error?.message || "Something went wrong",
+    };
+  }
+};
