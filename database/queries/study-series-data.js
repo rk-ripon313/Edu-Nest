@@ -1,4 +1,4 @@
-import { applySort } from "@/lib/applySort";
+import { getMongoSortStage } from "@/lib/applySort";
 import { enrichItemDatabyId, enrichItemsData } from "@/lib/enrich-item-data";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -17,6 +17,7 @@ import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { createAReport } from "./reports-data";
 
+// Uses MongoDB $facet for single query fetching paginated data + total count --- All series
 export const getStudySeries = async ({
   search,
   sort,
@@ -29,73 +30,97 @@ export const getStudySeries = async ({
   page = 1,
   itemsPerPage = 9,
 }) => {
-  const filter = {
-    isPublished: true,
-  };
+  await dbConnect();
 
-  // Search by title
+  const filter = { isPublished: true };
+
+  // Search filter
   if (search) {
     const regex = new RegExp(search, "i");
     filter.$or = [{ slug: { $regex: regex } }, { tags: { $regex: regex } }];
   }
 
-  // Filter by price range
+  // Price filter
   const parsedMin = Number(minPrice);
   const parsedMax = Number(maxPrice);
-
   if (!isNaN(parsedMin) && !isNaN(parsedMax)) {
-    filter.price = {
-      $gte: parsedMin,
-      $lte: parsedMax,
-    };
+    filter.price = { $gte: parsedMin, $lte: parsedMax };
   }
 
-  // Category-based filter using populate matching
-  const categoryFilter = {};
-  if (label) categoryFilter.label = label;
-  if (group) categoryFilter.group = group;
-  if (subject) categoryFilter.subject = subject;
-  if (part) categoryFilter.part = part;
-
   const skip = (page - 1) * itemsPerPage;
+  const sortStage = getMongoSortStage(sort);
 
   try {
-    await dbConnect();
-    const series = await StudySeriesModel.find(filter)
-      .select(
-        "title category thumbnail educator price chapters createdAt updatedAt"
-      )
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        match: categoryFilter,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName",
-      })
-      .skip(skip)
-      .limit(itemsPerPage)
-      .lean();
+    const pipeline = [
+      { $match: filter },
+      // Category populate
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      // Category filters
+      {
+        $match: {
+          ...(label && { "category.label": label }),
+          ...(group && { "category.group": group }),
+          ...(subject && { "category.subject": subject }),
+          ...(part && { "category.part": part }),
+        },
+      },
+      // Educator populate
+      {
+        $lookup: {
+          from: "users",
+          localField: "educator",
+          foreignField: "_id",
+          as: "educator",
+        },
+      },
+      { $unwind: "$educator" },
+      // Facet for paginated data + total count
 
-    // Remove books where `category` was filtered out by `match`
-    const filteredSeries = series.filter((book) => book.category);
+      {
+        $facet: {
+          data: [
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: itemsPerPage },
+            {
+              $project: {
+                title: 1,
+                price: 1,
+                thumbnail: 1,
+                createdAt: 1,
+                "category.label": 1,
+                "category.group": 1,
+                "category.subject": 1,
+                "category.part": 1,
+                "educator.firstName": 1,
+                "educator.lastName": 1,
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ];
 
-    // Get total count for pagination (without skip & limit)
-    const totalCount = await StudySeriesModel.countDocuments(filter).exec();
+    const result = await StudySeriesModel.aggregate(pipeline);
+    //console.log({ result });
 
-    // Add rating + enroll info
-    const enrichedSeries = await enrichItemsData(filteredSeries, "StudySeries");
+    const series = result[0]?.data || [];
+    const totalCount = result[0]?.totalCount[0]?.count || 0;
 
-    //  Sorting
-    const sortedSeries = sort
-      ? applySort(enrichedSeries, sort)
-      : enrichedSeries;
+    // Enrich with rating and enrollment
 
+    const enrichedSeries = await enrichItemsData(series, "StudySeries");
     return {
-      allStudySeries: replaceMongoIdInArray(sortedSeries),
+      allStudySeries: replaceMongoIdInArray(enrichedSeries),
       totalCount,
     };
   } catch (error) {

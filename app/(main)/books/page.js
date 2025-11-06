@@ -2,7 +2,7 @@ import Empty from "@/components/Empty";
 import FilterSidebar from "@/components/FilterSidebar";
 import ItemCard from "@/components/ItemCard";
 import MobileFilter from "@/components/MobileFilter";
-import Pagination from "@/components/Pagination";
+import PaginationBar from "@/components/PaginationBar";
 import ResetSearch from "@/components/ResetSearch";
 import SearchBar from "@/components/SearchBar";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -72,7 +72,7 @@ const BooksPage = async ({ searchParams }) => {
             )}
 
             {/* Pagination */}
-            <Pagination
+            <PaginationBar
               currentPage={currentPage}
               totalCount={totalCount}
               itemsPerPage={itemsPerPage}

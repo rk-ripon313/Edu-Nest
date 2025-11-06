@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ArrowDown, ArrowUp, Calendar } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const SortDropdown = () => {
@@ -29,12 +30,43 @@ const SortDropdown = () => {
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectContent className="bg-muted dark:bg-slate-900">
-        <SelectItem value="latest">📅 Latest</SelectItem>
-        <SelectItem value="oldest">📅 Oldest</SelectItem>
-        <SelectItem value="price-low">💰 Low to High</SelectItem>
-        <SelectItem value="price-high">💰 High to Low</SelectItem>
-        <SelectItem value="rating">⭐ Rating</SelectItem>
-        <SelectItem value="enrollment">👥 Enroll Count</SelectItem>
+        <SelectItem value="latest">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            <span>Latest</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="oldest">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            <span>Oldest</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="price-low">
+          <div className="flex items-center gap-2">
+            <ArrowDown className="w-4 h-4" />
+            <span>Low to High</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="price-high">
+          <div className="flex items-center gap-2">
+            <ArrowUp className="w-4 h-4" />
+            <span>High to Low</span>
+          </div>
+        </SelectItem>
+        {/* Future options:
+        <SelectItem value="rating">
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            <span>Rating</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="enrollment">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            <span>Enroll Count</span>
+          </div>
+        </SelectItem> */}
       </SelectContent>
     </Select>
   );
