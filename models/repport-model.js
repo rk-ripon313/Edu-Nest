@@ -18,7 +18,7 @@ const reportSchema = new Schema(
       },
     ],
 
-    currentLesson: {
+    currentWatch: {
       type: Schema.ObjectId,
       ref: "Watch",
     },
