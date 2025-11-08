@@ -5,16 +5,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { usePlay } from "@/context/PlayContext";
 import PlayBtn from "./PlayBtn";
 
 const ChapterList = ({ chapters }) => {
+  const { currentLesson } = usePlay();
   return (
     <div className="h-[70vh] overflow-y-auto p-2 mb-1">
       <Accordion
         type="single"
         collapsible
         className="w-full space-y-2"
-        defaultValue={chapters?.[0]?._id}
+        defaultValue={
+          currentLesson ? currentLesson.chapter : chapters?.[0]?._id
+        }
       >
         {chapters.map((lessons) => (
           <AccordionItem

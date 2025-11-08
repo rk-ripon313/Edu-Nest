@@ -10,9 +10,9 @@ export const createAReport = async (data) => {
 };
 
 //updateing current playing lesson.
-export const updateCurrentLesson = async ({ reportID, currentLesson }) => {
+export const updateCurrentWatch = async ({ reportID, currentWatch }) => {
   await dbConnect();
-  await ReportModel.findByIdAndUpdate(reportID, { currentLesson }).lean();
+  await ReportModel.findByIdAndUpdate(reportID, { currentWatch }).lean();
 };
 
 //updating report when any lesson is complited

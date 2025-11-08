@@ -13,6 +13,7 @@ import { ReportModel } from "@/models/repport-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
+import { WatchModel } from "@/models/watch-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { createAReport } from "./reports-data";
@@ -294,7 +295,6 @@ export const getStudySeriesForPlay = async (id) => {
         populate: {
           path: "lessonIds",
           model: LessonModel,
-          select: "title duration isPreview videoUrl access order chapter",
           match: { isPublished: true },
           options: { sort: { order: 1 } },
         },
@@ -306,10 +306,23 @@ export const getStudySeriesForPlay = async (id) => {
     const student = new mongoose.Types.ObjectId(user.id);
 
     // report..
-    let report = await ReportModel.findOne({ studySeries, student }).lean();
+    let report = await ReportModel.findOne({ studySeries, student })
+      .populate({
+        path: "currentWatch",
+        model: WatchModel,
+        populate: {
+          path: "lesson",
+          model: LessonModel,
+          match: { isPublished: true, access: true },
+        },
+      })
+      .lean();
+
     if (!report) {
       report = await createAReport({ studySeries, student });
+      if (!report) throw new Error("Failed to create report for student");
     }
+    // console.log({ report });
 
     const completedLessons =
       report?.totalCompletedLessons?.map((l) => l.toString()) || [];
@@ -344,8 +357,14 @@ export const getStudySeriesForPlay = async (id) => {
     const totalCount = allLessons.length;
     const completedCount = allLessons.filter((ls) => ls.completed).length;
 
+    //total progress
     series.totalProgress =
       totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    //   current watch
+    series.currentWatch = report?.currentWatch?.lesson
+      ? report.currentWatch
+      : null;
 
     return replaceMongoIdInObject(series);
   } catch (error) {

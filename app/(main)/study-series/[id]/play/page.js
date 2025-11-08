@@ -20,6 +20,7 @@ const PlayPage = async ({ params: { id } }) => {
     getTestimonials("StudySeries", id),
   ]);
   // console.log({ studySeries }, { hasEnrollment });
+  // console.log(studySeries.currentWatch);
 
   if (!user) return redirect("/login");
 
@@ -37,7 +38,10 @@ const PlayPage = async ({ params: { id } }) => {
     ({ student }) => student?._id?.toString() === user.id
   );
   return (
-    <PlayProvider>
+    <PlayProvider
+      chapters={studySeries?.chapters}
+      currentWatch={studySeries?.currentWatch}
+    >
       <header className="bg-white dark:bg-gray-800 shadow-sm py-4 px-6 flex items-center justify-between mb-2">
         <h1 className="text-xl font-bold text-gray-800 dark:text-white font-grotesk ">
           {studySeries.title}

@@ -9,72 +9,56 @@ import ReactPlayer from "react-player";
 const VideoPlayer = ({ studySeriesId }) => {
   const { currentLesson } = usePlay();
   const router = useRouter();
-  const progressRef = useRef(0);
+
+  const progressRef = useRef(currentLesson?.lastTime || 0);
+  const lastUpdateTimeRef = useRef(Date.now());
 
   const [hasWindow, setHasWindow] = useState(false);
   const [started, setStarted] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [lastTime, setLastTime] = useState(0);
+  const [duration, setDuration] = useState(currentLesson?.duration || 0);
 
+  // Detect window for SSR safety
   useEffect(() => {
     if (typeof window !== "undefined") setHasWindow(true);
   }, []);
 
-  // --- Lesson Start ---
+  // Reset state when lesson changes
   useEffect(() => {
-    if (!started) return;
+    setStarted(false);
+    setEnded(false);
+    setDuration(currentLesson?.duration || 0);
+    progressRef.current = currentLesson?.lastTime || 0;
+  }, [currentLesson?._id]);
 
-    const startLesson = async () => {
-      try {
-        await updateLessonWatch({
-          studySeriesId,
-          chapterId: currentLesson?.chapter,
-          lessonId: currentLesson._id,
-          state: "started",
-          lastTime: 0,
-          duration: currentLesson.duration,
-        });
-        setStarted(false);
-      } catch (err) {
-        console.error("Lesson start failed:", err);
-      }
-    };
+  // --- Start lesson tracking ---
+  const handleOnStart = async () => {
+    setStarted(true);
+    try {
+      await updateLessonWatch({
+        studySeriesId,
+        chapterId: currentLesson?.chapter,
+        lessonId: currentLesson._id,
+        state: "started",
+        lastTime: progressRef.current || 0,
+        duration,
+      });
+    } catch (err) {
+      console.error("Lesson start failed:", err);
+    }
+  };
 
-    startLesson();
-  }, [started, studySeriesId, currentLesson]);
-
-  // --- Lesson Completed ---
-  useEffect(() => {
-    if (!ended) return;
-
-    const completeLesson = async () => {
-      try {
-        await updateLessonWatch({
-          studySeriesId,
-          chapterId: currentLesson?.chapter,
-          lessonId: currentLesson._id,
-          state: "completed",
-          lastTime: duration,
-        });
-        setEnded(false);
-      } catch (err) {
-        console.error("Lesson complete failed:", err);
-      }
-    };
-
-    completeLesson();
-  }, [ended, duration, currentLesson, studySeriesId, router]);
-
-  // --- Progress Update every 30 seconds ---
+  // --- Auto update progress every 30 seconds ---
   const handleOnProgress = async ({ playedSeconds }) => {
     if (!duration || ended) return;
+    if (playedSeconds == null) return;
+
     if (playedSeconds >= duration - 1) {
       setEnded(true);
       return;
     }
+
     const now = Date.now();
-    // call after  evry  30s
     if (now - lastUpdateTimeRef.current >= 30000) {
       lastUpdateTimeRef.current = now;
       progressRef.current = Math.floor(playedSeconds);
@@ -86,7 +70,6 @@ const VideoPlayer = ({ studySeriesId }) => {
           lessonId: currentLesson._id,
           state: "in-progress",
           lastTime: playedSeconds,
-          duration,
         });
       } catch (err) {
         console.error("Progress update failed:", err);
@@ -94,30 +77,48 @@ const VideoPlayer = ({ studySeriesId }) => {
     }
   };
 
-  const handleOnStart = () => setStarted(true);
-  const handleOnEnded = () => setEnded(true);
+  // --- Completed handler ---
+  const handleOnEnded = async () => {
+    setEnded(true);
+    try {
+      await updateLessonWatch({
+        studySeriesId,
+        chapterId: currentLesson?.chapter,
+        lessonId: currentLesson._id,
+        state: "completed",
+        lastTime: duration,
+      });
+      setTimeout(() => router.refresh(), 1000);
+    } catch (err) {
+      console.error("Lesson complete failed:", err);
+    }
+  };
+
   const handleOnDuration = (dur) => setDuration(dur);
 
   return (
-    <div className="w-full bg-black rounded-lg overflow-hidden">
+    <div className="w-full bg-black rounded-lg overflow-hidden relative">
       {hasWindow && currentLesson?.videoUrl ? (
         <div className="relative w-full pb-[56.25%] h-[70vh]">
           <ReactPlayer
+            key={currentLesson._id}
             src={currentLesson.videoUrl}
             controls
-            playing
+            playing={started && !ended}
             width="100%"
             height="100%"
             className="absolute top-0 left-0"
             onStart={handleOnStart}
-            onDuration={handleOnDuration}
             onProgress={handleOnProgress}
+            onDuration={handleOnDuration}
             onEnded={handleOnEnded}
+            progressInterval={1000} //  ensure frequent progress updates
+            played={progressRef.current / (duration || 1)} //  resume from lastTime
           />
         </div>
       ) : (
         <div className="flex items-center justify-center h-[70vh] text-white p-6">
-          📺 Please select a video
+          No video available
         </div>
       )}
     </div>

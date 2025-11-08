@@ -50,8 +50,11 @@ const VideoTabs = ({}) => {
               <CardContent className="p-4">
                 {currentLesson?.resources?.length > 0 ? (
                   <ul className="list-disc pl-6 text-sm space-y-1">
-                    {currentLesson.resources.map((res, i) => (
-                      <li key={i}>{res}</li>
+                    {currentLesson.resources.map((res) => (
+                      <div className="p-2 mb-1" key={res?._id}>
+                        <h4 className="font-semibold">{res.title}</h4>
+                        <li className="list-none">{res.url} </li>
+                      </div>
                     ))}
                   </ul>
                 ) : (
