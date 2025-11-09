@@ -2,15 +2,27 @@ import Empty from "@/components/Empty";
 
 import ReviewAction from "@/components/details/ReviewAction";
 import Progress from "@/components/Progress";
+
 import { PlayProvider } from "@/context/PlayContext";
 import { getHasEnrollment } from "@/database/queries/enrollments-data";
 import { getStudySeriesForPlay } from "@/database/queries/study-series-data";
 import { getTestimonials } from "@/database/queries/testimonials-data";
 import { getCurrentUser } from "@/lib/session";
-import { redirect } from "next/navigation";
 import ChapterList from "./components/ChapterList";
-import VideoPlayer from "./components/VideoPlayer";
 import VideoTabs from "./components/VideoTabs";
+//  lazy load VideoPlayer
+const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[70vh] text-gray-400">
+      Loading video...
+    </div>
+  ),
+});
+
+import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 const PlayPage = async ({ params: { id } }) => {
   const [user, studySeries, hasEnrollment, testimonials] = await Promise.all([
@@ -50,7 +62,9 @@ const PlayPage = async ({ params: { id } }) => {
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4">
         {/* Player part - 2/3 width on lg */}
         <div className="lg:col-span-2">
-          <VideoPlayer studySeriesId={id} />
+          <Suspense fallback={<div className="h-[70vh] bg-black" />}>
+            <VideoPlayer studySeriesId={id} />
+          </Suspense>
           <VideoTabs />
         </div>
         {/* Chapter list - 1/3 width on lg */}

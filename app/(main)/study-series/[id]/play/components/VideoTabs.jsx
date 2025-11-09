@@ -53,7 +53,11 @@ const VideoTabs = ({}) => {
                     {currentLesson.resources.map((res) => (
                       <div className="p-2 mb-1" key={res?._id}>
                         <h4 className="font-semibold">{res.title}</h4>
-                        <li className="list-none">{res.url} </li>
+                        <li className="list-none curser-poner underline text-blue-800">
+                          <a target="_blank" href={res.url}>
+                            {res.url}
+                          </a>
+                        </li>
                       </div>
                     ))}
                   </ul>

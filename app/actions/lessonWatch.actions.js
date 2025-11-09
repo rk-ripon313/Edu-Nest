@@ -11,6 +11,7 @@ import { ReportModel } from "@/models/repport-model";
 import { WatchModel } from "@/models/watch-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
+import { revalidatePath } from "next/cache";
 
 export const updateLessonWatch = async ({
   studySeriesId,
@@ -81,7 +82,7 @@ export const updateLessonWatch = async ({
     // if completed → call helper Fn..
     if (state === "completed") {
       await updateReportOnCompleted(report, lesson, chapter);
-      // revalidatePath(`/study-series/${studySeriesId}/play`);
+      revalidatePath(`/study-series/${studySeriesId}/play`, "page");
     }
 
     return { success: true };

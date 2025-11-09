@@ -88,7 +88,7 @@ const VideoPlayer = ({ studySeriesId }) => {
         state: "completed",
         lastTime: duration,
       });
-      setTimeout(() => router.refresh(), 1000);
+      // setTimeout(() => router.refresh(), 1000);
     } catch (err) {
       console.error("Lesson complete failed:", err);
     }
