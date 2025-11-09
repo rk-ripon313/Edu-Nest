@@ -14,6 +14,7 @@ const ReviewDialog = ({ open, onClose, itemId, review, onModel, onSaved }) => {
   const [rating, setRating] = useState(review?.rating || 5);
   const [comment, setComment] = useState(review?.comment || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // console.log({ itemId }, { onModel }, { review });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ const ReviewDialog = ({ open, onClose, itemId, review, onModel, onSaved }) => {
         itemId,
         rating,
         comment,
-        reviewId: review?._id || null,
+        reviewId: review?.id || null,
       });
 
       if (res.success) {
