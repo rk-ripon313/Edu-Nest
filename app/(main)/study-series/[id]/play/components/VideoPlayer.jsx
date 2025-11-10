@@ -53,6 +53,9 @@ const VideoPlayer = ({ studySeriesId }) => {
     if (!duration || ended) return;
     if (playedSeconds == null) return;
 
+    // Ensure current lesson exists (cross-lesson safety)
+    if (!currentLesson?._id) return;
+
     if (playedSeconds >= duration - 1) {
       setEnded(true);
       return;
@@ -113,7 +116,11 @@ const VideoPlayer = ({ studySeriesId }) => {
             onDuration={handleOnDuration}
             onEnded={handleOnEnded}
             progressInterval={1000} //  ensure frequent progress updates
-            played={progressRef.current / (duration || 1)} //  resume from lastTime
+            onReady={(player) => {
+              if (progressRef.current > 0) {
+                player.seekTo(progressRef.current, "seconds");
+              }
+            }}
           />
         </div>
       ) : (

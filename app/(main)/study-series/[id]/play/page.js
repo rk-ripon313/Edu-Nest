@@ -23,6 +23,7 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import NextPrevLesson from "./components/NextPrevLesson";
 
 const PlayPage = async ({ params: { id } }) => {
   const [user, studySeries, hasEnrollment, testimonials] = await Promise.all([
@@ -65,6 +66,7 @@ const PlayPage = async ({ params: { id } }) => {
           <Suspense fallback={<div className="h-[70vh] bg-black" />}>
             <VideoPlayer studySeriesId={id} />
           </Suspense>
+          <NextPrevLesson />
           <VideoTabs />
         </div>
         {/* Chapter list - 1/3 width on lg */}

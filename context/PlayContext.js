@@ -13,24 +13,31 @@ export const PlayProvider = ({ children, chapters, currentWatch }) => {
   //  Use currentWatch (DB) for initial state, flattened
   const [currentLesson, setCurrentLesson] = useState(() => {
     if (currentWatch) {
-      return {
-        ...currentWatch, // lastTime, state, duration, completed
-        ...currentWatch.lesson, // flatten lesson fields
-      };
+      const { lesson, ...watchRest } = currentWatch;
+      return { ...watchRest, ...lesson };
     }
-
-    // fallback to first lesson
-    const firstLesson = chapters?.[0]?.lessonIds?.[0] || null;
-    return firstLesson
-      ? {
-          ...firstLesson, // flatten lesson fields
-          lastTime: 0,
-          state: "not-started",
-          completed: false,
-        }
-      : null;
+    return lessons?.[0] || null; // fallback to first lesson
   });
-  // console.log({ currentLesson });
+  //console.log({ currentLesson });
+
+  //  Find current index efficiently
+  const currentIndex = useMemo(() => {
+    return lessons.findIndex((l) => l._id === currentLesson?._id);
+  }, [lessons, currentLesson?._id]);
+
+  //  Compute navigation availability
+  const canGoNext = currentIndex < lessons.length - 1;
+  const canGoPrev = currentIndex > 0;
+
+  //  Next lesson handler
+  const goNextLesson = () => {
+    if (canGoNext) setCurrentLesson(lessons[currentIndex + 1]);
+  };
+
+  // Previous lesson handler
+  const goPrevLesson = () => {
+    if (canGoPrev) setCurrentLesson(lessons[currentIndex - 1]);
+  };
 
   const [progress, setProgress] = useState(0);
 
@@ -42,6 +49,11 @@ export const PlayProvider = ({ children, chapters, currentWatch }) => {
         setCurrentLesson,
         progress,
         setProgress,
+        canGoNext,
+        canGoPrev,
+        currentIndex,
+        goPrevLesson,
+        goNextLesson,
       }}
     >
       {children}

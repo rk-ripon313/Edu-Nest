@@ -6,19 +6,32 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { usePlay } from "@/context/PlayContext";
+import { useEffect, useState } from "react";
 import PlayBtn from "./PlayBtn";
 
 const ChapterList = ({ chapters }) => {
   const { currentLesson } = usePlay();
+
+  //  Maintain which chapter is open
+  const [openChapter, setOpenChapter] = useState(
+    currentLesson?.chapter || chapters?.[0]?._id
+  );
+
+  //  When currentLesson changes, auto-open its parent chapter
+  useEffect(() => {
+    if (currentLesson?.chapter) {
+      setOpenChapter(currentLesson.chapter);
+    }
+  }, [currentLesson?.chapter]);
+
   return (
     <div className="h-[70vh] overflow-y-auto p-2 mb-1">
       <Accordion
         type="single"
         collapsible
         className="w-full space-y-2"
-        defaultValue={
-          currentLesson ? currentLesson.chapter : chapters?.[0]?._id
-        }
+        value={openChapter}
+        onValueChange={setOpenChapter}
       >
         {chapters.map((lessons) => (
           <AccordionItem

@@ -11,14 +11,7 @@ const PlayBtn = ({ lesson }) => {
 
   return (
     <button
-      onClick={() =>
-        setCurrentLesson({
-          ...lesson, // flatten all lesson fields
-          lastTime: 0,
-          state: "not-started",
-          duration: lesson.duration,
-        })
-      }
+      onClick={() => setCurrentLesson(lesson)}
       disabled={!lesson?.access}
       className={`flex items-center w-full justify-between px-3 py-2 rounded-md transition ${
         isActive
