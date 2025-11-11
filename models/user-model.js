@@ -26,10 +26,11 @@ const userSchema = new Schema(
         linkedin: { type: String },
         website: { type: String },
       },
-      followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+
       isVerified: { type: Boolean, default: false },
     },
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
