@@ -1,16 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/formetPrice";
-import { getCurrentUser } from "@/lib/session";
 import { BookOpen, List, StarIcon, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import ActionBtns from "./ActionBtns";
 import FollowBtn from "./FollowBtn";
 const ItemCardHeader = async ({ item, isSeries }) => {
-  const user = await getCurrentUser();
-  console.log({ user });
-
   const name =
     item?.educator?.firstName && item?.educator?.lastName
       ? item.educator.firstName + " " + item.educator.lastName
@@ -74,12 +70,17 @@ const ItemCardHeader = async ({ item, isSeries }) => {
           <div>
             <h4 className="font-medium">{name}</h4>
 
-            {/* follow/unFollow actions */}
-            <FollowBtn
-              isOwner={item?.isOwner}
-              isFollowing={item?.isFollowing}
-              educatorUserName={item.educator?.userName}
-            />
+            <div className="flex justify-center items-center gap-2">
+              {/* follow/unFollow actions */}
+              <FollowBtn
+                isOwner={item?.isOwner}
+                isFollowing={item?.isFollowing}
+                educatorUserName={item.educator?.userName}
+              />
+              <span className="font-semibold ">
+                ( {item?.educatorFollowers} )
+              </span>
+            </div>
           </div>
         </div>
         {/* Ratings + Enrollments */}

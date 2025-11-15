@@ -149,7 +149,7 @@ export const getStudySeriesById = async (id) => {
       .populate({
         path: "educator",
         model: UserModel,
-        select: "firstName lastName image userName",
+        select: "firstName lastName image userName name followers",
       })
       .populate({
         path: "chapters",
