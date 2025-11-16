@@ -61,14 +61,16 @@ const ItemCardHeader = async ({ item, isSeries }) => {
 
         {/* Educator */}
         <div className="flex items-center gap-4 ">
-          <Link href={`/educator/${item.educator?.userName}`}>
+          <Link href={`/educators/${item.educator?.userName}`}>
             <Avatar className="bg-secondary">
               <AvatarImage src={item.educator?.image || ""} />
               <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
           <div>
-            <h4 className="font-medium">{name}</h4>
+            <Link href={`/educators/${item.educator?.userName}`}>
+              <h4 className="font-medium">{name}</h4>
+            </Link>
 
             <div className="flex justify-center items-center gap-2">
               {/* follow/unFollow actions */}
