@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const FollowBtn = ({ isOwner, isFollowing, educatorUserName }) => {
+const FollowBtn = ({
+  isOwner = false,
+  isFollowing = false,
+  educatorUserName,
+}) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 

@@ -111,6 +111,9 @@ export const toggleFollow = async ({ isFollowing, educatorUserName }) => {
     const currentUserId = currentUser.id;
     const educatorId = educator._id.toString();
 
+    if (currentUserId === educatorId)
+      return { success: false, error: "You cannot follow yourself" };
+
     if (isFollowing) {
       // ---- Unfollow ----
       await Promise.all([
@@ -144,7 +147,7 @@ export const toggleFollow = async ({ isFollowing, educatorUserName }) => {
     revalidatePath("/account");
     revalidatePath(`/educator/${educatorUserName}`);
     return { success: true, data: !isFollowing };
-  } catch (error) {
+  } catch (err) {
     return { success: false, error: err?.message || "Update failed" };
   }
 };
