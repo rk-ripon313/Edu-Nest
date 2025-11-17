@@ -1,5 +1,8 @@
+import { enrichItemsData } from "@/lib/enrich-item-data";
 import { getCurrentUser } from "@/lib/session";
+import { replaceMongoIdInArray } from "@/lib/transformId";
 import { BookModel } from "@/models/book-model";
+import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 
@@ -105,6 +108,53 @@ export const getEducatorInfoByUserName = async (userName) => {
     };
   } catch (error) {
     console.error("Educator info error:", error);
+    return null;
+  }
+};
+
+/**
+ *  Get educator items (books or series) by educatorId
+ *  @param {ObjectId} educatorId
+ *  @param {String} type -"Book" | "StudySeries"
+ *  @param {Number} limit -"haw many items you want with sortBy averageRating"
+ */
+export const getEducatorProfileItems = async (
+  educatorId,
+  type,
+  limit = null
+) => {
+  try {
+    await dbConnect();
+    const itemModel = type === "StudySeries" ? StudySeriesModel : BookModel;
+
+    const items = await itemModel
+      .find({
+        educator: educatorId,
+        isPublished: true,
+      })
+      .select(" title price thumbnail  createdAt")
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "category",
+        model: CategoryModel,
+        select: "label group subject part",
+      })
+      .populate("educator", "firstName lastName image userName name followers")
+      .lean();
+
+    if (!items) return;
+
+    let enrichedItems = await enrichItemsData(items, type);
+
+    if (limit) {
+      enrichedItems = enrichedItems
+        ?.sort((a, b) => b.averageRating - a.averageRating)
+        .slice(0, limit);
+    }
+
+    return replaceMongoIdInArray(enrichedItems);
+  } catch (error) {
+    console.error(`Educator ${type} fetch error:`, error);
     return null;
   }
 };
