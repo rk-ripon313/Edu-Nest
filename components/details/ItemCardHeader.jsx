@@ -5,7 +5,8 @@ import { BookOpen, List, StarIcon, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import ActionBtns from "./ActionBtns";
-const ItemCardHeader = ({ item, isSeries }) => {
+import FollowBtn from "./FollowBtn";
+const ItemCardHeader = async ({ item, isSeries }) => {
   const name =
     item?.educator?.firstName && item?.educator?.lastName
       ? item.educator.firstName + " " + item.educator.lastName
@@ -60,17 +61,28 @@ const ItemCardHeader = ({ item, isSeries }) => {
 
         {/* Educator */}
         <div className="flex items-center gap-4 ">
-          <Link href={`/educator/${item.educator?.userName}`}>
+          <Link href={`/educators/${item.educator?.userName}`}>
             <Avatar className="bg-secondary">
               <AvatarImage src={item.educator?.image || ""} />
               <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
           <div>
-            <h4 className="font-medium">{name}</h4>
-            <button className="text-sm font-sora font-medium text-primary hover:underline">
-              Follow
-            </button>
+            <Link href={`/educators/${item.educator?.userName}`}>
+              <h4 className="font-medium">{name}</h4>
+            </Link>
+
+            <div className="flex justify-center items-center gap-2">
+              {/* follow/unFollow actions */}
+              <FollowBtn
+                isOwner={item?.isOwner}
+                isFollowing={item?.isFollowing}
+                educatorUserName={item.educator?.userName}
+              />
+              <span className="font-semibold ">
+                ( {item?.educatorFollowers} )
+              </span>
+            </div>
           </div>
         </div>
         {/* Ratings + Enrollments */}

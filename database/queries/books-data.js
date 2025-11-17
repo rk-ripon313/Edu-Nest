@@ -141,7 +141,7 @@ export const getBookById = async (id) => {
       .populate({
         path: "educator",
         model: UserModel,
-        select: "firstName lastName image userName name",
+        select: "firstName lastName image userName name followers",
       })
       .lean();
 
