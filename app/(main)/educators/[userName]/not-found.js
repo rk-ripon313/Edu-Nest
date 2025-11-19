@@ -9,7 +9,7 @@ const EducatorNotFound = () => {
         Sorry, the Educator you&apos;re looking for doesn&apos;t exist or
         isn&apos;t available.
       </p>
-      <Link href="/educator" className="">
+      <Link href="/educators" className="">
         <Button>Go to Educator List</Button>
       </Link>
     </div>
