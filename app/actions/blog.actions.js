@@ -6,6 +6,7 @@ import { BlogModel } from "@/models/blog-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
+// Create a new Blog...
 export const createBlog = async ({
   title,
   shortDescription,
@@ -49,6 +50,28 @@ export const createBlog = async ({
     return {
       success: false,
       message: `Could not added new Blog: ${error?.message}`,
+    };
+  }
+};
+
+//update a blog By BlogID..
+export const updateBlog = async (blogId, dataToUpdate) => {
+  try {
+    await dbConnect();
+
+    const editBlog = await BlogModel.findByIdAndUpdate(
+      blogId,
+      { ...dataToUpdate },
+      { new: true }
+    );
+
+    if (!editBlog) return { success: false, message: "Blog update failed!" };
+
+    return { success: true, message: "Blog updated successfully" };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Could not edit  Blog: ${error?.message}`,
     };
   }
 };

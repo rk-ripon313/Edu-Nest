@@ -1,6 +1,6 @@
 "use client";
 
-import { createBlog } from "@/app/actions/blog.actions";
+import { createBlog, updateBlog } from "@/app/actions/blog.actions";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ import { Trash2Icon, Upload } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
@@ -39,8 +39,8 @@ const schema = z.object({
   tags: z.string().optional(),
 });
 
-const BlogForm = ({ initialDta }) => {
-  const isEdit = !!initialDta?._id;
+const BlogForm = ({ blogId, initialData }) => {
+  const isEdit = blogId;
   const router = useRouter();
 
   const [images, setImages] = useState([]);
@@ -62,12 +62,26 @@ const BlogForm = ({ initialDta }) => {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: initialDta?.title || "",
-      shortDescription: initialDta?.shortDescription || "",
-      content: initialDta?.content || "",
-      status: initialDta?.status || "published",
+      title: initialData?.title || "",
+      shortDescription: initialData?.shortDescription || "",
+      content: initialData?.content || "",
+      status: initialData?.status || "published",
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      if (initialData?.images?.length > 0) {
+        setImages(
+          initialData.images.map((url) => ({
+            file: null,
+            url,
+          }))
+        );
+        setTags(initialData?.tags);
+      }
+    }
+  }, [initialData]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "image/*": [] },
@@ -137,37 +151,52 @@ const BlogForm = ({ initialDta }) => {
     setIsSubmitting(true);
 
     try {
-      //uplood files to cloudinary
-      const onlyFiles = images.map((img) => img.file);
-      const imagesUrl = await uploadFileToCloudinary(
-        onlyFiles,
-        "image",
-        "blogs"
-      );
+      // Only new files
+      const files = images.filter((img) => img.file).map((img) => img.file);
+      const imagesUrl =
+        files.length > 0
+          ? await uploadFileToCloudinary(files, "image", "blogs")
+          : [];
 
-      if (!imagesUrl) {
-        toast.error("Image upload failed");
+      // Final images: old ones + newly uploaded
+      const finalImages = [
+        ...images.filter((img) => img.url && !img.file).map((img) => img.url), // old images for Edit-Mode
+        ...imagesUrl,
+      ];
+
+      let res;
+
+      if (isEdit) {
+        // update blog
+        res = await updateBlog(blogId, {
+          ...data,
+          tags,
+          images: finalImages,
+        });
+      } else {
+        // create blog
+        res = await createBlog({
+          ...data,
+          tags,
+          imagesUrl: finalImages,
+        });
+      }
+
+      if (!res?.success) {
+        toast.error(
+          res?.message ||
+            (isEdit ? "Blog update failed" : "Blog creation failed")
+        );
         return;
       }
 
-      // save in DB (server action)
-
-      const blogRes = await createBlog({
-        ...data,
-        tags,
-        imagesUrl,
-      });
-
-      if (!blogRes.success) {
-        toast.error(blogRes?.message || "Blog not Posted");
-        return;
-      }
-
-      toast.success(blogRes?.message || "Blog added successfully");
+      toast.success(res?.message || (isEdit ? "Blog updated" : "Blog created"));
 
       reset();
       setTags([]);
       router.push("/dashboard/blogs");
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
