@@ -1,3 +1,4 @@
+import { deleteBlog } from "@/app/actions/blog.actions";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/session";
 import { BlogModel } from "@/models/blog-model";
@@ -47,7 +48,7 @@ const BlogListPage = async () => {
               >
                 Edit
               </Link>
-              <form onSubmit={""}>
+              <form action={deleteBlog.bind(null, blog._id.toString())}>
                 <Button
                   type="submit"
                   className="px-3 py-1 text-sm bg-red-500 text-white rounded"
