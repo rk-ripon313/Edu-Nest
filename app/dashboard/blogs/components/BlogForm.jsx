@@ -151,19 +151,32 @@ const BlogForm = ({ blogId, initialData }) => {
     setIsSubmitting(true);
 
     try {
-      // Only new files
-      const files = images.filter((img) => img.file).map((img) => img.file);
-      const imagesUrl =
-        files.length > 0
-          ? await uploadFileToCloudinary(files, "image", "blogs")
-          : [];
+      //  Old URLs
+      const existingImageUrls = images
+        .filter((item) => item.url && !item.file)
+        .map((item) => item.url);
 
-      // Final images: old ones + newly uploaded
-      const finalImages = [
-        ...images.filter((img) => img.url && !img.file).map((img) => img.url), // old images for Edit-Mode
-        ...imagesUrl,
-      ];
+      //  New files
+      const newImageFiles = images
+        .filter((item) => item.file)
+        .map((item) => item.file);
 
+      //  Upload new images
+      let uploadedImageUrls = newImageFiles.length
+        ? await uploadFileToCloudinary(newImageFiles, "image", "blogs")
+        : [];
+
+      // Ensure response is always an array (normalize Cloudinary output)
+      if (!Array.isArray(uploadedImageUrls)) {
+        uploadedImageUrls = [uploadedImageUrls];
+      }
+
+      // Combine old & newly uploaded image URLs
+      const finalImageArray = [...existingImageUrls, ...uploadedImageUrls];
+
+      // ------------------------
+      // Handle here Create and Edit Server Actions
+      // ------------------------
       let res;
 
       if (isEdit) {
@@ -171,14 +184,14 @@ const BlogForm = ({ blogId, initialData }) => {
         res = await updateBlog(blogId, {
           ...data,
           tags,
-          images: finalImages,
+          images: finalImageArray,
         });
       } else {
         // create blog
         res = await createBlog({
           ...data,
           tags,
-          imagesUrl: finalImages,
+          images: finalImageArray,
         });
       }
 

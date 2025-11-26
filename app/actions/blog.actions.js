@@ -13,7 +13,7 @@ export const createBlog = async ({
   content,
   status,
   tags,
-  imagesUrl,
+  images,
 }) => {
   try {
     await dbConnect();
@@ -37,7 +37,7 @@ export const createBlog = async ({
       slug,
       shortDescription,
       content,
-      images: Array.isArray(imagesUrl) ? imagesUrl : [imagesUrl],
+      images,
       status,
       tags,
     });
