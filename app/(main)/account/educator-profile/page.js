@@ -4,8 +4,11 @@ import EducatorForm from "../components/EducatorForm";
 
 const EducatorProfile = async () => {
   const user = await getCurrentUser();
-  if (user?.role !== "educator") {
-    redirect("become-educator");
+
+  if (!user) redirect("/login");
+
+  if (user.role !== "educator") {
+    redirect("/account/become-educator");
   }
 
   return (

@@ -3,9 +3,14 @@ import EducatorForm from "../components/EducatorForm";
 
 const BecomeEducatorPage = async () => {
   const user = await getCurrentUser();
-  if (user?.role !== "student") {
-    redirect("/login");
+
+  if (!user) redirect("/login");
+
+  // already educator → go to profile
+  if (user.role === "educator") {
+    redirect("/account/educator-profile");
   }
+
   return (
     <div className=" mx-auto p-4">
       <h1 className="text-3xl font-bold mb-2 font-grotesk">
