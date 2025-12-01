@@ -66,7 +66,7 @@ const ImageGalleryModal = ({
           <img
             src={currentImage.url}
             alt=""
-            className="max-h-[90vh] w-auto object-contain"
+            className="max-h-[90vh] w-auto object-contain rounded-lg"
           />
 
           {/* Prev Button */}

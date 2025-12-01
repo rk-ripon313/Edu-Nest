@@ -1,5 +1,6 @@
 "use server";
 
+import { getBlogs } from "@/database/queries/blogs-data";
 import { slugify } from "@/lib/formetData";
 import { getCurrentUser } from "@/lib/session";
 import { BlogModel } from "@/models/blog-model";
@@ -7,7 +8,12 @@ import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
 
-// Create a new Blog...
+/**
+ * this action create new blog
+ * @param {Object} options - blog data
+ * @returns {Object} - success message or error message
+ */
+
 export const createBlog = async ({
   title,
   shortDescription,
@@ -57,7 +63,12 @@ export const createBlog = async ({
   }
 };
 
-//update a blog By BlogID..
+/**
+ * this action update blog by blogId
+ * @param {Object} options - blogId, dataToUpdate
+ * @returns {Object} - success message or error message
+ */
+
 export const updateBlog = async (blogId, dataToUpdate) => {
   try {
     await dbConnect();
@@ -84,7 +95,11 @@ export const updateBlog = async (blogId, dataToUpdate) => {
   }
 };
 
-//Delete Blog
+/**
+ * this action delete blog by blogId
+ * @param {Object} options - blogId
+ * @returns {Object} - success message or error message
+ */
 
 export const deleteBlog = async (blogId) => {
   try {
@@ -104,4 +119,28 @@ export const deleteBlog = async (blogId) => {
       message: `Could not delete blog: ${error?.message}`,
     };
   }
+};
+
+/**
+ * this action call getBlogs quary function to fetch blogs for Load More functionality
+ * @param {Object} options - filter options = currentTab, search, currentSort, page, limit
+ * @returns {Array} - list of blogs
+ */
+
+export const fetchBlogsByServerAction = async ({
+  currentTab,
+  search,
+  currentSort,
+  page,
+  limit,
+}) => {
+  // Call the server-side function
+  const newBlogs = await getBlogs({
+    currentTab,
+    search,
+    currentSort,
+    page,
+    limit,
+  });
+  return newBlogs;
 };
