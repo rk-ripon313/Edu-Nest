@@ -97,57 +97,57 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
 };
 
 //user following actions
-export const toggleFollow = async ({ isFollowing, educatorUserName }) => {
+export const toggleFollow = async ({ educatorUserName }) => {
   try {
     await dbConnect();
 
     const currentUser = await getCurrentUser();
-    if (!currentUser?.id) return { success: false, error: "Unauthorized" };
+    if (!currentUser?.id) return { success: false, message: "Unauthorized" };
 
     // fetch educator by username
     const educator = await UserModel.findOne({ userName: educatorUserName });
-    if (!educator) return { success: false, error: "Educator not found" };
+    if (!educator) return { success: false, message: "Educator not found" };
 
     const currentUserId = currentUser.id;
     const educatorId = educator._id.toString();
 
     if (currentUserId === educatorId)
-      return { success: false, error: "You cannot follow yourself" };
+      return { success: false, message: "You cannot follow yourself" };
 
-    if (isFollowing) {
+    const userDocument = await UserModel.findById(currentUserId, "following");
+    const currentlyFollowing = userDocument.following.includes(educatorId);
+
+    let updateAction;
+    let newMessage;
+    const newFollowingStatus = !currentlyFollowing;
+
+    if (currentlyFollowing) {
       // ---- Unfollow ----
-      await Promise.all([
-        UserModel.findByIdAndUpdate(
-          educatorId,
-          { $pull: { followers: currentUserId } }, // remove from educator's followers
-          { new: true }
-        ),
-        UserModel.findByIdAndUpdate(
-          currentUserId,
-          { $pull: { following: educatorId } }, // remove from current user's following
-          { new: true }
-        ),
-      ]);
+      updateAction = "$pull";
+      newMessage = "Unfollowed successfully.";
     } else {
       // ---- Follow ----
-      await Promise.all([
-        UserModel.findByIdAndUpdate(
-          educatorId,
-          { $addToSet: { followers: currentUserId } }, // add to educator's followers
-          { new: true }
-        ),
-        UserModel.findByIdAndUpdate(
-          currentUserId,
-          { $addToSet: { following: educatorId } }, // add to current user's following
-          { new: true }
-        ),
-      ]);
+      updateAction = "$addToSet";
+      newMessage = "Started following!";
     }
 
-    revalidatePath("/account");
-    revalidatePath(`/educator/${educatorUserName}`);
-    return { success: true, data: !isFollowing };
+    await Promise.all([
+      UserModel.findByIdAndUpdate(
+        educatorId,
+        { [updateAction]: { followers: currentUserId } },
+        { new: true }
+      ),
+      UserModel.findByIdAndUpdate(
+        currentUserId,
+        { [updateAction]: { following: educatorId } },
+        { new: true }
+      ),
+    ]);
+    revalidatePath("/blogs");
+    revalidatePath(`/educators/${educatorUserName}`);
+
+    return { success: true, data: newFollowingStatus, message: newMessage };
   } catch (err) {
-    return { success: false, error: err?.message || "Update failed" };
+    return { success: false, message: err?.message || "Update failed" };
   }
 };

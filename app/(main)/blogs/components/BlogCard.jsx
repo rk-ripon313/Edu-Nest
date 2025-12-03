@@ -1,13 +1,15 @@
-// components/BlogCard.jsx
 "use client";
 
+import FollowBtn from "@/components/details/FollowBtn";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import { Dialog } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { MessageSquare, MoreHorizontal, Share2, ThumbsUp } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import BlogCardActions from "./BlogCardActions";
+import BlogCardStats from "./BlogCardStats";
 
 const BlogCard = ({ blog }) => {
   const {
@@ -21,6 +23,11 @@ const BlogCard = ({ blog }) => {
     comments,
     educator,
     createdAt,
+    isLiked,
+    likesCount,
+    commentsCount,
+    likersDetails,
+    isOwnBlog,
   } = blog;
 
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -40,10 +47,6 @@ const BlogCard = ({ blog }) => {
       setShouldShowToggle(true);
     }
   }, [content]);
-
-  // Data Calculations
-  const likeCount = likes?.length || 0;
-  const commentCount = comments?.length || 0;
 
   const educatorName = educator.firstName
     ? `${educator?.firstName} ${educator?.lastName}`
@@ -67,21 +70,32 @@ const BlogCard = ({ blog }) => {
         <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
           <div className="flex items-center">
             <Link href={`/educators/${educator?.userName}`}>
-              <Image
-                src={educatorImage}
-                alt={educatorName}
-                width={40}
-                height={40}
-                className="rounded-full object-cover mr-3 border-2 border-indigo-500"
-              />
+              <div className="w-10 h-10 relative mr-3">
+                <Image
+                  src={educatorImage}
+                  alt={educatorName}
+                  fill
+                  className="rounded-full object-cover border-2 border-indigo-500"
+                />
+              </div>
             </Link>
             <div>
-              <Link
-                href={`/educators/${educator?.userName}`}
-                className="font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                {educatorName}
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link
+                  href={`/educators/${educator?.userName}`}
+                  className="font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400"
+                >
+                  {educatorName}
+                </Link>
+
+                {/* follow button */}
+                {!isOwnBlog && (
+                  <FollowBtn
+                    isFollowing={educator?.isFollowing}
+                    educatorUserName={educator?.userName}
+                  />
+                )}
+              </div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {createdAt
                   ? format(new Date(createdAt), "MMM d, yyyy 'at' h:mm a")
@@ -166,37 +180,19 @@ const BlogCard = ({ blog }) => {
         )}
 
         {/* Footer Stats: Likes, Comments, Views */}
-        <div className="p-4 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <ThumbsUp size={16} className="text-indigo-500 fill-indigo-500" />
-            <span>{likeCount} Likes</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <MessageSquare size={16} className="mr-1" />
-              <span>{commentCount} Comments</span>
-            </div>
-          </div>
-        </div>
+        <BlogCardStats
+          likesCount={likesCount}
+          commentsCount={commentsCount}
+          likersDetails={likersDetails}
+        />
 
         {/* Interaction Bar: Like, Comment, Share */}
-        <div className="flex divide-x divide-gray-200 dark:divide-gray-700 text-gray-600 dark:text-gray-300">
-          {/* Like Button */}
-          <button className="flex-1 p-3 flex justify-center items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-bl-lg transition">
-            <ThumbsUp size={20} />
-            <span className="font-medium">Like</span>
-          </button>
-          {/* Comment Button */}
-          <button className="flex-1 p-3 flex justify-center items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-            <MessageSquare size={20} />
-            <span className="font-medium">Comment</span>
-          </button>
-          {/* Share Button */}
-          <button className="flex-1 p-3 flex justify-center items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-br-lg transition">
-            <Share2 size={20} />
-            <span className="font-medium">Share</span>
-          </button>
-        </div>
+        <BlogCardActions
+          blogId={_id.toString()}
+          isLiked={isLiked}
+          slug={slug}
+          blogTitle={title}
+        />
       </div>
 
       {/*Image Gallery MODAL*/}

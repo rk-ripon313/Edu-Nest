@@ -3,14 +3,14 @@ import { BlogModel } from "@/models/blog-model";
 import mongoose from "mongoose";
 
 /**
- *  getBlogs() → Fetch blogs for All or Following tab
+ *  getBlogs() → Fetch blogs for All or Following tab
  * @param {Object} options
  * @param {String} options.currentTab - "all" | "following"
  * @param {String} options.search - search string
  * @param {String} options.currentSort - "trending" | "latest" | "popular" | "oldest"
  * @param {String} options.page - page number for pagination
  * @param {String} options.limit - items limit per page
- * @returns {Array} Blogs list with educator populated + likes/comments count
+ * @returns {Array} Blogs list with educator populated + likes/comments count + follow status + likers details
  */
 
 export const getBlogs = async ({
@@ -23,20 +23,22 @@ export const getBlogs = async ({
   try {
     const user = await getCurrentUser();
 
+    const currentUserId = user?.id;
+    const followingIds = user?.following?.map((id) => id.toString()) || [];
+
     // FOLLOWING tab but user not logged in OR no following list
-    if (currentTab === "following" && (!user || !user.following?.length)) {
+    if (currentTab === "following" && (!user || !followingIds.length)) {
       return [];
     }
 
-    // Base match
+    //  Base match and filters
     let matchStage = { status: "published" };
 
     // Following tab → only blogs by followed educators
     if (currentTab === "following") {
-      const followingIds = user.following.map(
-        (id) => new mongoose.Types.ObjectId(id)
-      );
-      matchStage.educator = { $in: followingIds };
+      matchStage.educator = {
+        $in: followingIds.map((id) => new mongoose.Types.ObjectId(id)),
+      };
     }
 
     // Search filter
@@ -55,19 +57,30 @@ export const getBlogs = async ({
     // Pagination variables
     const skip = (Number(page) - 1) * Number(limit);
 
+    //  AGGREGATION PIPELINE
     const blogs = await BlogModel.aggregate([
       { $match: matchStage },
 
-      // Count likes & comments
+      // Calculate Counts & Ownership
       {
         $addFields: {
+          // Count likes & comments
           likesCount: { $size: "$likes" },
           commentsCount: { $size: "$comments" },
+          // Like status for current user
+          isLiked: {
+            $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"],
+          },
+          // Trending
           isTrending: { $cond: [{ $gte: ["$createdAt", sevenDaysAgo] }, 1, 0] },
+          // Ownership status
+          isOwnBlog: {
+            $eq: ["$educator", new mongoose.Types.ObjectId(currentUserId)],
+          },
         },
       },
 
-      //Sort before skip/limit
+      // Sort before skip/limit (Must be after counts are calculated)
       {
         $sort: (() => {
           if (currentSort === "latest") return { createdAt: -1 };
@@ -78,11 +91,11 @@ export const getBlogs = async ({
         })(),
       },
 
-      //  PAGINATION STAGES
+      //  Pagination Stages
       { $skip: skip },
       { $limit: Number(limit) },
 
-      // Populate educator fields
+      // Populate Educator details
       {
         $lookup: {
           from: "users",
@@ -103,6 +116,47 @@ export const getBlogs = async ({
         },
       },
       { $unwind: "$educator" },
+
+      //  Add isFollowing field to educator
+      {
+        $addFields: {
+          "educator.isFollowing": {
+            $cond: {
+              // Check if the educator's ID is present in the current user's following list
+              if: {
+                $in: [
+                  "$educator._id",
+                  followingIds.map((id) => new mongoose.Types.ObjectId(id)),
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
+      //  Populate users who liked the blog
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          as: "likersDetails",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+                firstName: 1,
+                lastName: 1,
+              },
+            },
+          ],
+        },
+      },
     ]);
 
     return blogs;

@@ -144,3 +144,65 @@ export const fetchBlogsByServerAction = async ({
   });
   return newBlogs;
 };
+
+/**
+ * toggleLikeAction - Toggles the like status of a blog for the current user.
+ * @param {string} blogId - The ID of the blog to like/unlike.
+ * @returns {Object} {success: boolean, liked: boolean, error: string}
+ */
+
+export const toggleLikeAction = async (blogId) => {
+  await dbConnect();
+  const user = await getCurrentUser();
+
+  if (!user)
+    return {
+      success: false,
+      message: "Authentication required to like a blog.",
+    };
+
+  const currentUserId = user.id;
+
+  try {
+    const blog = await BlogModel.findById(blogId);
+
+    if (!blog) return { success: false, message: "Blog not found." };
+
+    // Check if the user already liked the blog
+    const alreadyLiked = blog.likes.includes(currentUserId);
+
+    let updatedBlog;
+
+    if (alreadyLiked) {
+      // If already liked, unlike it ($pull)
+      updatedBlog = await BlogModel.findByIdAndUpdate(
+        blogId,
+        { $pull: { likes: currentUserId } },
+        { new: true }
+      );
+    } else {
+      // If not liked, like it ($push)
+      updatedBlog = await BlogModel.findByIdAndUpdate(
+        blogId,
+        { $push: { likes: currentUserId } },
+        { new: true }
+      );
+    }
+
+    revalidatePath("/blogs");
+    revalidatePath(`/blogs/${blog.slug}`);
+
+    return {
+      success: true,
+      liked: !alreadyLiked,
+      message: alreadyLiked ? "Blog unliked." : "Blog liked.",
+    };
+  } catch (error) {
+    console.error("Error toggling like:", error);
+    return {
+      success: false,
+      message: "Failed to update like status.",
+      liked: false,
+    };
+  }
+};
