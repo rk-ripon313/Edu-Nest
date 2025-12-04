@@ -81,7 +81,12 @@ const LoadMoreBlogs = ({ filterState }) => {
     <>
       <div className="space-y-6  min-w-[320px]  sm:w-[380px] md:w-[600px] lg:w-[650px]  ">
         {blogs.map((blog) => (
-          <BlogCard key={blog._id} blog={blog} />
+          <div
+            className="bg-white dark:bg-gray-800 shadow-xl rounded-lg mb-6 w-full  mx-auto transition-all duration-300 hover:shadow-2xl"
+            key={blog._id}
+          >
+            <BlogCard key={blog._id} blog={blog} />{" "}
+          </div>
         ))}
       </div>
 
