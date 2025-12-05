@@ -11,7 +11,7 @@ const BlogCardStats = ({ likesCount, commentsCount, likersDetails }) => {
     <>
       <div className="p-4 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <div
-          className="flex items-center space-x-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" // CHANGED: Cursor ও Hover যোগ করা হলো
+          className="flex items-center space-x-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
           onClick={() => setShowLikesModal(true)}
         >
           <Heart size={16} className="text-red-500 fill-red-500" />

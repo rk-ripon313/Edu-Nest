@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/session";
 import { BlogModel } from "@/models/blog-model";
+import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
 /**
@@ -21,6 +22,7 @@ export const getBlogs = async ({
   limit = 6,
 }) => {
   try {
+    await dbConnect();
     const user = await getCurrentUser();
 
     const currentUserId = user?.id;
@@ -64,19 +66,15 @@ export const getBlogs = async ({
       // Calculate Counts & Ownership
       {
         $addFields: {
-          // Count likes & comments
           likesCount: { $size: "$likes" },
           commentsCount: { $size: "$comments" },
-          // Like status for current user
-          isLiked: {
-            $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"],
-          },
-          // Trending
           isTrending: { $cond: [{ $gte: ["$createdAt", sevenDaysAgo] }, 1, 0] },
-          // Ownership status
-          isOwnBlog: {
-            $eq: ["$educator", new mongoose.Types.ObjectId(currentUserId)],
-          },
+          isLiked: currentUserId
+            ? { $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"] }
+            : false,
+          isOwnBlog: currentUserId
+            ? { $eq: ["$educator", new mongoose.Types.ObjectId(currentUserId)] }
+            : false,
         },
       },
 
@@ -163,5 +161,95 @@ export const getBlogs = async ({
   } catch (error) {
     console.error("getBlogs ERROR:", error);
     return [];
+  }
+};
+
+/**
+ * getBlogDetailsBySlug() → Fetch single blog details by slug
+ * @param {String} slug - blog slug
+ * @returns {Object} Blog details with educator populated + likes/comments count + follow status + likers details
+ */
+export const getBlogDetailsBySlug = async (slug) => {
+  try {
+    await dbConnect();
+
+    const user = await getCurrentUser();
+    const currentUserId = user?.id;
+    const followingIds = user?.following || [];
+
+    const blog = await BlogModel.aggregate([
+      { $match: { slug, status: "published" } },
+
+      // Likes/comments count & isLiked
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+          isLiked: currentUserId
+            ? { $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"] }
+            : false,
+          isOwnBlog: currentUserId
+            ? { $eq: ["$educator", new mongoose.Types.ObjectId(currentUserId)] }
+            : false,
+        },
+      },
+
+      // Educator populate
+      {
+        $lookup: {
+          from: "users",
+          localField: "educator",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                firstName: 1,
+                lastName: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+              },
+            },
+          ],
+          as: "educator",
+        },
+      },
+      { $unwind: "$educator" },
+
+      //  Add isFollowing field to educator
+      {
+        $addFields: {
+          "educator.isFollowing": {
+            $cond: {
+              // Check if the educator's ID is present in the current user's following list
+              if: {
+                $in: [
+                  "$educator._id",
+                  followingIds.map((id) => new mongoose.Types.ObjectId(id)),
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
+      // Populate likes users
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          pipeline: [{ $project: { _id: 1, name: 1, userName: 1, image: 1 } }],
+          as: "likersDetails",
+        },
+      },
+    ]);
+
+    return blog[0] || null;
+  } catch (error) {
+    console.error("getBlogDetailsBySlug ERROR:", error);
+    return null;
   }
 };
