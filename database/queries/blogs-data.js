@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/session";
 import { BlogModel } from "@/models/blog-model";
+import { BlogCommentModel } from "@/models/blogComment-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
@@ -251,5 +252,127 @@ export const getBlogDetailsBySlug = async (slug) => {
   } catch (error) {
     console.error("getBlogDetailsBySlug ERROR:", error);
     return null;
+  }
+};
+
+/**
+ * getBlogComments() → Fetch comments for a blog
+ * @param {String} blogId - Blog ID
+ * @returns {Object} -comments list with user populated  + likes count + isLiked + isAuthor + replies processed
+ */
+
+export const getBlogComments = async ({
+  blogId,
+  page = 1,
+  limit = 10,
+  sort = "latest",
+}) => {
+  try {
+    await dbConnect();
+
+    const [user, blogDoc, totalComments] = await Promise.all([
+      getCurrentUser(),
+      BlogModel.findById(blogId)
+        .select("educator")
+        .populate("educator", "_id")
+        .lean(),
+      BlogCommentModel.countDocuments({
+        blog: new mongoose.Types.ObjectId(blogId),
+        parentComment: null,
+      }),
+    ]);
+
+    const currentUserId = user?.id
+      ? new mongoose.Types.ObjectId(user.id)
+      : null;
+
+    const blogAuthorId = blogDoc?.educator?._id
+      ? new mongoose.Types.ObjectId(blogDoc.educator._id)
+      : null;
+
+    const isCurrentUserBlogAuthor =
+      currentUserId && blogAuthorId
+        ? currentUserId.equals(blogAuthorId)
+        : false;
+
+    const skip = (page - 1) * limit;
+
+    // Sorting logic
+    const sortStage = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+
+    const comments = await BlogCommentModel.find({
+      blog: new mongoose.Types.ObjectId(blogId),
+      parentComment: null,
+    })
+      .sort(sortStage)
+      .skip(skip)
+      .limit(Number(limit))
+      .populate("user", "firstName lastName name userName image")
+      .populate("replies.user", "firstName lastName name userName image")
+      .lean();
+
+    // Process each comment for likesCount, isLiked, isAuthor, replies etc.
+    comments.forEach((comment) => {
+      const commentUserId = comment.user?._id.toString(); //comment author ID
+
+      comment.likesCount = comment.likes ? comment.likes.length : 0; //likes count
+
+      // isLiked, isAuthor, isOwner flags
+      comment.isLiked =
+        currentUserId && comment.likes
+          ? comment.likes.some((likeId) => likeId.equals(currentUserId))
+          : false;
+      comment.isAuthor =
+        blogAuthorId && commentUserId
+          ? blogAuthorId.equals(commentUserId)
+          : false;
+      comment.isOwner =
+        currentUserId && commentUserId
+          ? currentUserId.equals(commentUserId)
+          : false;
+
+      comment.repliesCount = comment.replies ? comment.replies.length : 0; //replies count
+
+      // Replies Processing (Always Oldest First & isAuthor)
+      if (comment.replies && comment.replies.length > 0) {
+        //Sortby createdAt ascending
+        comment.replies.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+
+        comment.replies = comment.replies.map((reply) => {
+          const replyUserId = reply.user?._id.toString();
+
+          return {
+            ...reply,
+            isAuthor:
+              blogAuthorId && replyUserId
+                ? blogAuthorId.equals(replyUserId)
+                : false,
+            isOwner:
+              currentUserId && replyUserId
+                ? currentUserId.equals(replyUserId)
+                : false,
+          };
+        });
+      }
+    });
+
+    return {
+      comments,
+      totalComments,
+      hasMore: totalComments > page * limit,
+      isCurrentUserBlogAuthor,
+      currentUserImage: user?.image || null,
+    };
+  } catch (error) {
+    console.error("getBlogComments ERROR:", error);
+    return {
+      comments: [],
+      totalComments: 0,
+      hasMore: false,
+      isCurrentUserBlogAuthor: false,
+      currentUserImage: null,
+    };
   }
 };
