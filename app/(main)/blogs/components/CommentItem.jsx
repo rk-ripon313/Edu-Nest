@@ -73,22 +73,15 @@ const CommentItem = ({ comment, isCurrentUserBlogAuthor }) => {
               <MessageSquare size={14} />
               Reply
             </button>
-
-            {/* View Replies */}
-            {comment.repliesCount > 0 && (
-              <span className="text-indigo-600 text-xs cursor-pointer">
-                View Replies ({comment.repliesCount})
-              </span>
-            )}
           </div>
         </div>
 
         {(canEdit || canDelete) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="opacity-0 group-hover:opacity-100 outline-none p-1  rounded transition">
+              <button className="opacity-0 group-hover:opacity-100 outline-none p-1  rounded  transition ">
                 <MoreVertical
-                  className="transition  hover:bg-gray-200 dark:hover:bg-gray-700"
+                  className="hover:scale-110 transition-all "
                   size={16}
                 />
               </button>
@@ -128,6 +121,7 @@ const CommentItem = ({ comment, isCurrentUserBlogAuthor }) => {
                   const replyetorName = r?.user?.firstName
                     ? `${r.user?.firstName} ${r.user?.lastName}`
                     : r.user?.name;
+
                   return (
                     <div key={r._id} className="flex gap-3 relative group">
                       <img
@@ -160,8 +154,11 @@ const CommentItem = ({ comment, isCurrentUserBlogAuthor }) => {
                       {(replyCanEdit || replyCanDelete) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="opacity-0 group-hover:opacity-100 transition p-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
-                              <MoreVertical size={16} />
+                            <button className="outline-none opacity-0 group-hover:opacity-100 transition p-1 rounded ">
+                              <MoreVertical
+                                className="hover:scale-110 transition-all "
+                                size={16}
+                              />
                             </button>
                           </DropdownMenuTrigger>
 
