@@ -79,7 +79,6 @@ const BlogComments = ({
       setIsSubmitting(true);
       const res = await addBlogComment({ blogId, content });
       if (res?.success) {
-        setComments((prev) => [res.comment, ...prev]);
         setContent("");
       } else {
         toast.error("Failed to add comment");
