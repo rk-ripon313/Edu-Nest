@@ -9,10 +9,10 @@ import { useInView } from "react-intersection-observer";
 import CommentItem from "./CommentItem";
 import SortComment from "./SortComment";
 
-import Spinner from "@/components/ui/Spinner";
-import { Loader2, SendHorizonal } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import CommentInput from "./CommentInput";
 
 const BlogComments = ({
   blogId,
@@ -28,9 +28,6 @@ const BlogComments = ({
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialHasMore);
-
-  const [content, setContent] = useState(""); // New comment content
-  const [isSubmitting, setIsSubmitting] = useState(false); // New comment submission state
 
   // Intersection Observer Hook
   const { ref, inView } = useInView({
@@ -71,23 +68,14 @@ const BlogComments = ({
     if (inView) loadMoreComments();
   }, [inView, loadMoreComments]);
 
-  // Handle adding a new comment
-  const handleAddComment = async () => {
-    try {
-      if (!content.trim()) return;
+  const updateComment = (commentId, newContent) => {
+    setComments((prev) =>
+      prev.map((c) => (c._id === commentId ? { ...c, content: newContent } : c))
+    );
+  };
 
-      setIsSubmitting(true);
-      const res = await addBlogComment({ blogId, content });
-      if (res?.success) {
-        setContent("");
-      } else {
-        toast.error("Failed to add comment");
-      }
-    } catch (e) {
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const removeComment = (commentId) => {
+    setComments((prev) => prev.filter((c) => c._id !== commentId));
   };
 
   return (
@@ -115,6 +103,8 @@ const BlogComments = ({
               key={comment._id}
               comment={comment}
               isCurrentUserBlogAuthor={isCurrentUserBlogAuthor}
+              onUpdate={updateComment}
+              onDelete={removeComment}
             />
           ))
         ) : (
@@ -122,7 +112,7 @@ const BlogComments = ({
         )}
 
         {/* Infinite scroll trigger */}
-        <div ref={ref} className={isLoading ? "h-5" : ""}></div>
+        <div ref={ref} className={isLoading ? "h-6" : ""}></div>
 
         {/* Loading spinner */}
         {isLoading && (
@@ -132,9 +122,9 @@ const BlogComments = ({
 
       {/* FIXED Bottom Input Bar  */}
       <div
-        className="sticky bottom-0 left-0 w-full bg-white dark:bg-gray-900 
-          border-t border-gray-300 dark:border-gray-700 p-3 flex gap-2 items-center
-          shadow-[0_-4px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_10px_rgba(0,0,0,0.4)]"
+        className="absolute bottom-0 left-0 w-full bg-white dark:bg-gray-900 
+              border-t border-gray-300 dark:border-gray-700 p-3 flex gap-2 items-center
+              shadow-[0_-4px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_10px_rgba(0,0,0,0.4)]"
       >
         <div className="w-9 h-9 relative ">
           <Image
@@ -145,26 +135,23 @@ const BlogComments = ({
           />
         </div>
 
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            className="w-full pl-4 pr-12 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm"
-            placeholder="Write a comment..."
-            disabled={isSubmitting}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-          />
-
-          {/* Send Icon Button */}
-          <button
-            disabled={isSubmitting || !content.trim()}
-            onClick={handleAddComment}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800"
-          >
-            {isSubmitting ? <Spinner /> : <SendHorizonal size={18} />}
-          </button>
-        </div>
+        <CommentInput
+          mode="create"
+          maxLength={500}
+          onSubmit={async (content) => {
+            try {
+              const res = await addBlogComment({ blogId, content });
+              if (!res?.success) {
+                toast.error(res?.message || "Failed to add comment");
+                return false;
+              }
+              return true;
+            } catch (error) {
+              toast.error(error?.message || "Failed to add comment");
+              return false;
+            }
+          }}
+        />
       </div>
     </div>
   );
