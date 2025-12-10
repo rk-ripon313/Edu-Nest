@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 
 const ConfirmDialog = ({
   open,
@@ -20,7 +21,9 @@ const ConfirmDialog = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   onConfirm,
+  onclose,
 }) => {
+  const router = useRouter();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
@@ -32,10 +35,21 @@ const ConfirmDialog = ({
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel
+            onClick={() => {
+              onOpenChange(false);
+              router.refresh();
+            }}
+          >
+            {cancelText}
+          </AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700 text-white"
-            onClick={onConfirm}
+            onClick={() => {
+              onOpenChange(false);
+              router.refresh();
+              onConfirm();
+            }}
           >
             {confirmText}
           </AlertDialogAction>

@@ -88,7 +88,7 @@ const BlogComments = ({
 
       {/* Scrollable Comments Container */}
       <div
-        className=" max-h-[380px] overflow-y-auto px-2 py-3 space-y-2
+        className=" max-h-[380px] overflow-y-auto px-2 py-3 space-y-2 pb-24
               [scrollbar-width:thin]
               [scrollbar-color:#b3b3b3_transparent]
               [&::-webkit-scrollbar]:w-[6px]
@@ -103,6 +103,7 @@ const BlogComments = ({
               key={comment._id}
               comment={comment}
               isCurrentUserBlogAuthor={isCurrentUserBlogAuthor}
+              currentUserImage={currentUserImage}
               onUpdate={updateComment}
               onDelete={removeComment}
             />
