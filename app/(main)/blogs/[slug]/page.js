@@ -6,6 +6,35 @@ import { notFound } from "next/navigation";
 import BlogCard from "../components/BlogCard";
 import BlogComments from "../components/BlogComments";
 
+export const generateMetadata = async ({ params: { slug } }) => {
+  const blog = await getBlogDetailsBySlug(slug);
+
+  if (!blog) {
+    return { title: "Blog Not Found | EduNest" };
+  }
+
+  return {
+    title: `${blog.title} | EduNest`,
+    description: blog.shortDescription || blog.content.slice(0, 160),
+    openGraph: {
+      title: `${blog.title} | EduNest`,
+      description: blog.shortDescription || blog.content.slice(0, 160),
+      url: `${process.env.NEXT_PUBLIC_SITE_URL}/blogs/${slug}`,
+      images:
+        blog.images && blog.images.length
+          ? [
+              {
+                url: blog.images[0],
+                width: 800,
+                height: 600,
+                alt: blog.title,
+              },
+            ]
+          : undefined,
+    },
+  };
+};
+
 const COMMENTS_PER_PAGE = 10;
 
 const BlogDetailsPage = async ({
