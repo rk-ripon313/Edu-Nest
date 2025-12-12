@@ -45,6 +45,10 @@ export const addBlogComment = async ({ blogId, content }) => {
     if (!newComment)
       return { success: false, message: "Failed to add comment." };
 
+    await BlogModel.findByIdAndUpdate(blogId, {
+      $push: { comments: newComment._id },
+    });
+
     revalidatePath(`/blogs/${blogId}`);
 
     return { success: true, message: "Comment added successfully." };
@@ -106,35 +110,33 @@ export const deleteBlogComment = async ({ blogId, commentId }) => {
     const currentUser = await getCurrentUser();
     if (!currentUser) return { success: false, message: "Please login first" };
 
-    //  Find the comment
-    const comment =
-      await BlogCommentModel.findById(commentId).select("user blog");
+    // Fetch comment & blog
+    const [comment, blog] = await Promise.all([
+      BlogCommentModel.findById(commentId).select("user blog"),
+      BlogModel.findById(blogId).select("educator"),
+    ]);
 
     if (!comment) return { success: false, message: "Comment not found" };
-
-    //  Find the blog
-    const blog = await BlogModel.findById(blogId).select("educator");
     if (!blog) return { success: false, message: "Blog not found" };
 
     const isCommentOwner = comment.user.toString() === currentUser.id;
     const isBlogAuthor = blog.educator.toString() === currentUser.id;
 
-    //  Permission check
-    if (!isCommentOwner && !isBlogAuthor)
+    if (!isCommentOwner && !isBlogAuthor) {
       return {
         success: false,
         message: "You are not allowed to delete this comment",
       };
+    }
 
-    //  Delete comment document
-    await BlogCommentModel.findByIdAndDelete(commentId);
+    // Delete comment + remove from blog.comments
+    await Promise.all([
+      BlogCommentModel.findByIdAndDelete(commentId),
+      BlogModel.findByIdAndUpdate(blogId, {
+        $pull: { comments: commentId },
+      }),
+    ]);
 
-    //  Remove comment ID from blog.comments array
-    await BlogModel.findByIdAndUpdate(blogId, {
-      $pull: { comments: commentId },
-    });
-
-    //  Revalidate page
     revalidatePath(`/blogs/${blogId}`);
 
     return { success: true, message: "Comment deleted successfully." };
