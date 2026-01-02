@@ -1,10 +1,19 @@
 import FollowBtn from "@/components/details/FollowBtn";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
+import { Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import BlogActionsDropdown from "./BlogActionsDropdown";
 
-const BlogHeader = ({ educator, createdAt, isOwnBlog }) => {
+const BlogHeader = ({
+  educator,
+  createdAt,
+  isOwnBlog,
+  status,
+  isDashboard = false,
+  blogId,
+}) => {
   const educatorName = educator.firstName
     ? `${educator?.firstName} ${educator?.lastName}`
     : educator?.name;
@@ -32,6 +41,17 @@ const BlogHeader = ({ educator, createdAt, isOwnBlog }) => {
               {educatorName}
             </Link>
 
+            {/* STATUS BADGE */}
+            {isOwnBlog && isDashboard && (
+              <Badge
+                variant={status === "private" ? "outline" : "default"}
+                className={`capitalize ${status === "private" && "flex items-center gap-1 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400"}`}
+              >
+                {status === "private" && <Lock className="w-3 h-3" />}
+                {status}
+              </Badge>
+            )}
+
             {/* follow button */}
             {!isOwnBlog && (
               <FollowBtn
@@ -47,9 +67,8 @@ const BlogHeader = ({ educator, createdAt, isOwnBlog }) => {
           </p>
         </div>
       </div>
-      <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-        <MoreHorizontal size={20} />
-      </button>
+
+      <BlogActionsDropdown isOwnBlog={isOwnBlog} blogId={blogId} />
     </div>
   );
 };

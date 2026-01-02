@@ -10,46 +10,30 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useRouter } from "next/navigation";
 
 const ConfirmDialog = ({
-  open,
-  onOpenChange,
   trigger, // React element to trigger the dialog
   title = "Are you sure?",
   description = "This action cannot be undone.",
   confirmText = "Confirm",
   cancelText = "Cancel",
   onConfirm,
-  onclose,
 }) => {
-  const router = useRouter();
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
 
-      <AlertDialogContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 ">
+      <AlertDialogContent className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel
-            onClick={() => {
-              onOpenChange(false);
-              router.refresh();
-            }}
-          >
-            {cancelText}
-          </AlertDialogCancel>
+          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700 text-white"
-            onClick={() => {
-              onOpenChange(false);
-              router.refresh();
-              onConfirm();
-            }}
+            onClick={onConfirm}
           >
             {confirmText}
           </AlertDialogAction>

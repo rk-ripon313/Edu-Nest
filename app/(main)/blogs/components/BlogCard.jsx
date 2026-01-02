@@ -4,7 +4,7 @@ import BlogContent from "./BlogContent";
 import BlogHeader from "./BlogHeader";
 import BlogImages from "./BlogImages";
 
-const BlogCard = ({ blog }) => {
+const BlogCard = ({ blog, isDashboard = false }) => {
   const {
     _id,
     title,
@@ -19,6 +19,7 @@ const BlogCard = ({ blog }) => {
     commentsCount,
     likersDetails,
     isOwnBlog,
+    status,
   } = blog;
 
   return (
@@ -28,6 +29,9 @@ const BlogCard = ({ blog }) => {
         educator={educator}
         createdAt={createdAt}
         isOwnBlog={isOwnBlog}
+        status={status}
+        isDashboard={isDashboard}
+        blogId={_id?.toString()}
       />
 
       {/* Blog Content: Title & Short Description + Main Content */}

@@ -1,17 +1,13 @@
-import { deleteBlog } from "@/app/actions/blog.actions";
-import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/session";
-import { BlogModel } from "@/models/blog-model";
-import mongoose from "mongoose";
+import BlogCard from "@/app/(main)/blogs/components/BlogCard";
+import BlogFilters from "@/app/(main)/blogs/components/BlogFilters";
+import Empty from "@/components/Empty";
+import { getDashboardBlogs } from "@/database/queries/dashboard-data";
 import Link from "next/link";
 
-const BlogListPage = async () => {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "educator") return <p>Access Denied</p>;
-
-  const blogs = await BlogModel.find({
-    educator: new mongoose.Types.ObjectId(user.id),
-  }).sort({ createdAt: -1 });
+const BlogListPage = async ({
+  searchParams: { search = "", sort = "latest" },
+}) => {
+  const blogs = await getDashboardBlogs({ search, sort });
 
   return (
     <div className="space-y-6">
@@ -26,42 +22,21 @@ const BlogListPage = async () => {
         </Link>
       </div>
 
-      {/* Blog List --BASIC_DEMO_TEMPORARY-DESIGN */}
-      <div className="space-y-4">
-        {blogs.map((blog) => (
-          <div key={blog._id} className="border p-4 rounded-md shadow-sm">
-            <h2 className="text-xl font-semibold">{blog.title}</h2>
-            <p className="text-gray-600 text-sm">{blog.shortDescription}</p>
-            <div>{blog.content} </div>
-            <div className="text-xs text-gray-500 mt-2 flex gap-4">
-              <span>Views: {blog.views}</span>
-              <span>Status: {blog.status}</span>
-              <span>
-                {new Date(blog.createdAt).toLocaleDateString("en-GB")}
-              </span>
+      {/*Educator Blog List */}
+      <div className="space-y-6  mx-3 md:mx-4 lg:mx-6 ">
+        <BlogFilters sort={sort} />
+        {blogs.length > 0 ? (
+          blogs.map((blog) => (
+            <div
+              key={blog._id}
+              className="rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition"
+            >
+              <BlogCard blog={blog} isDashboard />
             </div>
-
-            <div className="mt-3 flex gap-3">
-              <Link
-                href={`/dashboard/blogs/${blog._id.toString()}/edit`}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
-              >
-                Edit
-              </Link>
-              <form action={deleteBlog.bind(null, blog._id.toString())}>
-                <Button
-                  type="submit"
-                  className="px-3 py-1 text-sm bg-red-500 text-white rounded"
-                >
-                  Delete
-                </Button>
-              </form>
-            </div>
-          </div>
-        ))}
-
-        {/* If empty */}
-        {blogs.length === 0 && <p>No blogs found.</p>}
+          ))
+        ) : (
+          <Empty title={" No blogs found for this educator."} />
+        )}
       </div>
     </div>
   );

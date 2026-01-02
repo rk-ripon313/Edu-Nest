@@ -61,6 +61,7 @@ const BlogFilters = ({ sort }) => {
             <SelectItem value="trending">Trending</SelectItem>
             <SelectItem value="latest">Latest</SelectItem>
             <SelectItem value="popular">Popular</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
           </SelectContent>
         </Select>
       </div>
