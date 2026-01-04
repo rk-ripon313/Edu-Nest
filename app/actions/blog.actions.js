@@ -4,6 +4,7 @@ import { getBlogs } from "@/database/queries/blogs-data";
 import { slugify } from "@/lib/formetData";
 import { getCurrentUser } from "@/lib/session";
 import { BlogModel } from "@/models/blog-model";
+import { BlogCommentModel } from "@/models/blogComment-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
@@ -73,6 +74,19 @@ export const updateBlog = async (blogId, dataToUpdate) => {
   try {
     await dbConnect();
 
+    const user = await getCurrentUser();
+    if (!user?.id) return { success: false, message: "Unauthorized" };
+
+    const blog = await BlogModel.findById(blogId);
+    if (!blog) return { success: false, message: "Blog not found" };
+
+    if (blog.educator.toString() !== user.id) {
+      return {
+        success: false,
+        message: "You are not allowed to edit this blog",
+      };
+    }
+
     const editBlog = await BlogModel.findByIdAndUpdate(
       blogId,
       { ...dataToUpdate },
@@ -105,8 +119,26 @@ export const deleteBlog = async (blogId) => {
   try {
     await dbConnect();
 
-    const deleted = await BlogModel.findByIdAndDelete(blogId);
+    const user = await getCurrentUser();
+    if (!user?.id) return { success: false, message: "Unauthorized" };
 
+    const blog = await BlogModel.findById(blogId);
+    if (!blog) return { success: false, message: "Blog not found" };
+
+    if (blog.educator.toString() !== user.id) {
+      return {
+        success: false,
+        message: "You are not allowed to delete this blog",
+      };
+    }
+
+    // Delete comments
+    if (blog.comments?.length > 0) {
+      await BlogCommentModel.deleteMany({ _id: { $in: blog.comments } });
+    }
+
+    // Delete the blog itself
+    const deleted = await BlogModel.findByIdAndDelete(blogId);
     if (!deleted) return { success: false, message: "Blog delete failed!" };
 
     revalidatePath("/blogs");
