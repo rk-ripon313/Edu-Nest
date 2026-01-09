@@ -18,7 +18,7 @@ const BlogActionsDropdown = ({ isOwnBlog, blogId }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           className="transition cursor-pointer pointer-events-auto"
@@ -32,7 +32,7 @@ const BlogActionsDropdown = ({ isOwnBlog, blogId }) => {
 
       <DropdownMenuContent
         align="end"
-        className="w-32 z-20 bg-white dark:bg-slate-950"
+        className="w-32 z-[9999]  bg-white dark:bg-slate-950"
       >
         {isOwnBlog ? (
           <>
