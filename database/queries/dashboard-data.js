@@ -37,9 +37,10 @@ export const getEducatorDashboardData = async () => {
     const educator = new mongoose.Types.ObjectId(user.id);
 
     //  Get educator’s books and series
-    const [books, series] = await Promise.all([
+    const [books, series, blogs] = await Promise.all([
       BookModel.find({ educator }).select("_id isPublished").lean(),
       StudySeriesModel.find({ educator }).select("_id isPublished").lean(),
+      BlogModel.find({ educator }).select("_id status").lean(),
     ]);
 
     const bookIds = books.map((b) => b._id);
@@ -91,6 +92,8 @@ export const getEducatorDashboardData = async () => {
     const totalPublishedBooks = books?.filter((b) => b.isPublished).length || 0;
     const totalPublishedSeries =
       series?.filter((s) => s.isPublished).length || 0;
+    const totalPublishedBlogs =
+      blogs?.filter((b) => b.status === "published").length || 0;
 
     // Prepare recent data (limit to 5)
     const recentEnrollments = enrollments?.slice(0, 5) || [];
@@ -107,7 +110,7 @@ export const getEducatorDashboardData = async () => {
         avgRating: Number(avgRating.toFixed(1)) || 0,
         totalPublishedBooks,
         totalPublishedSeries,
-        totalPublishedBlogs: 12,
+        totalPublishedBlogs,
       },
       recentEnrollments,
       recentReviews,
