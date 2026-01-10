@@ -1,6 +1,7 @@
 import { enrichItemsData } from "@/lib/enrich-item-data";
 import { getCurrentUser } from "@/lib/session";
 import { replaceMongoIdInArray } from "@/lib/transformId";
+import { BlogModel } from "@/models/blog-model";
 import { BookModel } from "@/models/book-model";
 import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
@@ -9,6 +10,7 @@ import { StudySeriesModel } from "@/models/StudySeries-model";
 import { TestimonialModel } from "@/models/testimonial-model";
 import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
+import mongoose from "mongoose";
 
 /**
  * Get all educators with enriched data (books + series)
@@ -252,5 +254,110 @@ export const getEducatorProfileItems = async (
   } catch (error) {
     console.error(`Educator ${type} fetch error:`, error);
     return null;
+  }
+};
+
+/**
+ * Get educator blogs by educatorId
+ * @param {ObjectId | string} educatorId -Educator id
+ * @param {number} limit-
+ * @returns {Array} Blogs list with educator populated + likes/comments count + follow status + likers details
+ */
+
+export const getEducatorBlogs = async (educatorId) => {
+  try {
+    await dbConnect();
+    const user = await getCurrentUser();
+    const currentUserId = user?.id;
+    const followingIds = user?.following?.map((id) => id.toString()) || [];
+
+    return await BlogModel.aggregate([
+      {
+        $match: {
+          status: "published",
+          educator: new mongoose.Types.ObjectId(educatorId),
+        },
+      },
+
+      { $sort: { createdAt: -1 } },
+
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+          isLiked: currentUserId
+            ? { $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"] }
+            : false,
+          isOwnBlog: currentUserId
+            ? { $eq: ["$educator", new mongoose.Types.ObjectId(currentUserId)] }
+            : false,
+        },
+      },
+
+      // Populate Educator details
+      {
+        $lookup: {
+          from: "users",
+          localField: "educator",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                firstName: 1,
+                lastName: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+              },
+            },
+          ],
+          as: "educator",
+        },
+      },
+      { $unwind: "$educator" },
+      //  Add isFollowing field to educator
+      {
+        $addFields: {
+          "educator.isFollowing": {
+            $cond: {
+              // Check if the educator's ID is present in the current user's following list
+              if: {
+                $in: [
+                  "$educator._id",
+                  followingIds.map((id) => new mongoose.Types.ObjectId(id)),
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
+      //  Populate users who liked the blog
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          as: "likersDetails",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+                firstName: 1,
+                lastName: 1,
+              },
+            },
+          ],
+        },
+      },
+    ]);
+  } catch (error) {
+    console.error("getEducatorBlogs ERROR", error);
+    return [];
   }
 };

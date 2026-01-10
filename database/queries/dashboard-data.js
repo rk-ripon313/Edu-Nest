@@ -1,6 +1,7 @@
 import { enrichItemsData } from "@/lib/enrich-item-data";
 import { getCurrentUser } from "@/lib/session";
 import { replaceMongoIdInObject } from "@/lib/transformId";
+import { BlogModel } from "@/models/blog-model";
 import { BookModel } from "@/models/book-model";
 import { CategoryModel } from "@/models/category-model";
 import { ChapterModel } from "@/models/chapter-model";
@@ -13,7 +14,19 @@ import mongoose from "mongoose";
 import { getEnrollments } from "./enrollments-data";
 import { getTestimonials } from "./testimonials-data";
 
-// Educator Page Dashboard Data
+/**
+ * Get Educator Dashboard Overview Data
+ *
+ * @returns {Object} Dashboard data including stats, recent enrollments & reviews
+ *
+ * Features:
+ * - Only available for logged-in educator users
+ * - Counts total revenue (paid enrollments)
+ * - Calculates total & type-wise enrollments (Book / StudySeries)
+ * - Calculates total rating & average rating
+ * - Counts published books & series
+ * - Returns recent 5 enrollments & testimonials
+ */
 export const getEducatorDashboardData = async () => {
   await dbConnect();
 
@@ -24,9 +37,10 @@ export const getEducatorDashboardData = async () => {
     const educator = new mongoose.Types.ObjectId(user.id);
 
     //  Get educator’s books and series
-    const [books, series] = await Promise.all([
+    const [books, series, blogs] = await Promise.all([
       BookModel.find({ educator }).select("_id isPublished").lean(),
       StudySeriesModel.find({ educator }).select("_id isPublished").lean(),
+      BlogModel.find({ educator }).select("_id status").lean(),
     ]);
 
     const bookIds = books.map((b) => b._id);
@@ -78,6 +92,8 @@ export const getEducatorDashboardData = async () => {
     const totalPublishedBooks = books?.filter((b) => b.isPublished).length || 0;
     const totalPublishedSeries =
       series?.filter((s) => s.isPublished).length || 0;
+    const totalPublishedBlogs =
+      blogs?.filter((b) => b.status === "published").length || 0;
 
     // Prepare recent data (limit to 5)
     const recentEnrollments = enrollments?.slice(0, 5) || [];
@@ -94,7 +110,7 @@ export const getEducatorDashboardData = async () => {
         avgRating: Number(avgRating.toFixed(1)) || 0,
         totalPublishedBooks,
         totalPublishedSeries,
-        totalPublishedBlogs: 12,
+        totalPublishedBlogs,
       },
       recentEnrollments,
       recentReviews,
@@ -120,7 +136,15 @@ export const getEducatorDashboardData = async () => {
   }
 };
 
-//educator items list fn..
+/**
+ * Get educator items list (Books or Study Series)
+ *
+ * @param {"Book"|"StudySeries"} onModel - Which model to fetch
+ * @param {string} userId - Educator ID
+ * @param {boolean} [enrich=false] - Whether to enrich items with enrollments & reviews
+ * @returns {Array} Items list with category populated and optional enriched data
+ */
+
 export const getEducatorItems = async (onModel, userId, enrich = false) => {
   try {
     await dbConnect();
@@ -150,7 +174,15 @@ export const getEducatorItems = async (onModel, userId, enrich = false) => {
   }
 };
 
-//educator item details fn..
+/**
+ * Get single educator item details (Book / StudySeries)
+ *
+ * @param {"Book"|"StudySeries"} onModel - Model type
+ * @param {string} itemId - Item ID
+ * @param {string} userId - Educator ID (ownership validation)
+ * @param {boolean} [enrich=false] - Whether to attach student enrollment + review details
+ * @returns {Object|null} Item details with optional enriched student data
+ */
 export const getEducatorItemInfobyId = async (
   onModel,
   itemId,
@@ -229,5 +261,119 @@ export const getEducatorItemInfobyId = async (
   } catch (error) {
     console.error("Error fetching item:", error);
     return null;
+  }
+};
+
+/**
+ * Get educator dashboard blogs
+ * @param {Object} options - Filter & sorting options
+ * @param {string} [options.search=""] - Search by title, slug or tags
+ * @param {("latest"|"oldest"|"popular"|"trending")} [options.sort="latest"] - Sorting type
+ * @returns {Array} Blogs list with educator populated + likes/comments count + trending flag + likers details
+ */
+export const getDashboardBlogs = async ({ search = "", sort = "latest" }) => {
+  try {
+    await dbConnect();
+    const user = await getCurrentUser();
+
+    if (!user?.id) return [];
+
+    const currentUserId = user.id;
+
+    // Trending date (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Match condition
+    const matchStage = {
+      educator: new mongoose.Types.ObjectId(currentUserId),
+    };
+
+    if (search) {
+      matchStage.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { slug: { $regex: search, $options: "i" } },
+        { tags: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Sort condition
+    let sortStage = { createdAt: -1 }; // default: latest
+
+    if (sort === "oldest") {
+      sortStage = { createdAt: 1 };
+    } else if (sort === "popular") {
+      sortStage = { likesCount: -1, commentsCount: -1 };
+    } else if (sort === "trending") {
+      sortStage = { isTrending: -1, likesCount: -1, commentsCount: -1 };
+    }
+
+    const blogs = await BlogModel.aggregate([
+      { $match: matchStage },
+
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+          isTrending: {
+            $cond: [{ $gte: ["$createdAt", sevenDaysAgo] }, 1, 0],
+          },
+          isLiked: {
+            $in: [new mongoose.Types.ObjectId(currentUserId), "$likes"],
+          },
+          isOwnBlog: true,
+        },
+      },
+
+      { $sort: sortStage },
+
+      // Populate educator
+      {
+        $lookup: {
+          from: "users",
+          localField: "educator",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                firstName: 1,
+                lastName: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+              },
+            },
+          ],
+          as: "educator",
+        },
+      },
+      { $unwind: "$educator" },
+
+      // Likers info
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                userName: 1,
+                image: 1,
+                firstName: 1,
+                lastName: 1,
+              },
+            },
+          ],
+          as: "likersDetails",
+        },
+      },
+    ]);
+    return blogs;
+  } catch (error) {
+    console.error("getDashboardBlogs ERROR", error);
+    return [];
   }
 };
