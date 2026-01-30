@@ -1,9 +1,11 @@
-import { getCurrentUser } from "@/lib/session";
+import FollowStats from "@/components/follow/FollowStats";
+import { getCurrentUserWithFollowStats } from "@/lib/current-user";
 import ProfileForm from "../components/ProfileForm";
 import ProfileImageEditor from "../components/ProfileImageEditor";
 
 const ProfilePage = async () => {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserWithFollowStats();
+
   return (
     <section className=" mx-auto space-y-8 p-4">
       {/* Profile Header */}
@@ -22,6 +24,11 @@ const ProfilePage = async () => {
           <p className="text-sm mt-1">
             <span className="font-semibold">Role:</span> {user.role}
           </p>
+          {/* Followers / Following */}
+          <FollowStats
+            followers={user.followers ?? []}
+            following={user.following ?? []}
+          />
         </div>
       </div>
       {/* Profile Fields */}
