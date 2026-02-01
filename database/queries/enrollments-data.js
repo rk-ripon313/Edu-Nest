@@ -9,11 +9,50 @@ import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
-//finding all enrollment for logged in user
+/**
+ * Returns enrollment counts for a user by model type.
+ * @param {string} userId - The ID of the user whose enrollment stats are being retrieved
+ * @returns {Promise<{ enrolledBooksCount: number, enrolledSeriesCount: number }>} The enrollment stats for the user
+ */
+
+export const getEnrollmentStats = async (userId) => {
+  await dbConnect();
+
+  const stats = await EnrollmentModel.aggregate([
+    {
+      $match: {
+        student: new mongoose.Types.ObjectId(userId),
+        status: { $in: ["paid", "free"] },
+      },
+    },
+    {
+      $group: {
+        _id: "$onModel",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  return {
+    enrolledBooksCount: stats.find((s) => s._id === "Book")?.count || 0,
+    enrolledSeriesCount: stats.find((s) => s._id === "StudySeries")?.count || 0,
+  };
+};
+
+/**
+ * Fetches all enrolled items for a user of a specific model type.
+ * @param {string} userId - The ID of the user.
+ * @param {"Book" | "StudySeries"} model - The model type to fetch.
+ * @param {Object} options - Optional search and sort options.
+ * @param {string} [options.search] - Search keyword for item title.
+ * @param {"latest" | "oldest" | "price-low" | "price-high"} [options.sort="latest"] - Sorting method.
+ * @returns {Promise<Array>} Array of enrolled items.
+ */
+
 export const getEnrolledItems = async (
   userId,
   model,
-  { search = "", sort = "latest" } = {}
+  { search = "", sort = "latest" } = {},
 ) => {
   if (model === "Book") {
     await import("@/models/book-model");
@@ -37,7 +76,7 @@ export const getEnrolledItems = async (
           ? { createdAt: -1 }
           : sort === "oldest"
             ? { createdAt: 1 }
-            : {}
+            : {},
       )
       .populate({
         path: "content",
@@ -77,7 +116,13 @@ export const getEnrolledItems = async (
   }
 };
 
-//Finding existing Enrollment
+/**
+ * Checks if the current logged-in user has already enrolled in a specific item.
+ * @param {"Book" | "StudySeries"} onModel - The model type.
+ * @param {string} itemId - The ID of the content item.
+ * @returns {Promise<Object|null>} The enrollment object if exists, otherwise null.
+ */
+
 export const getHasEnrollment = async (onModel, itemId) => {
   await dbConnect();
   const user = await getCurrentUser();
@@ -91,7 +136,12 @@ export const getHasEnrollment = async (onModel, itemId) => {
   return hasEnrollment ? replaceMongoIdInObject(hasEnrollment) : null;
 };
 
-//create a new Enrollment
+/**
+ * Creates a new enrollment record for a user.
+ * @param {Object} enrollmentData - The enrollment data object.
+ * @returns {Promise<Object|null>} The created enrollment object, or null if failed.
+ */
+
 export const createNewEnrollment = async (enrollmentData) => {
   await dbConnect();
   try {
@@ -103,7 +153,13 @@ export const createNewEnrollment = async (enrollmentData) => {
   }
 };
 
-// enrollment list for a item .
+/**
+ * Fetches all enrollments for a specific content item.
+ * @param {"Book" | "StudySeries"} onModel - The model type.
+ * @param {string} itemId - The ID of the content item.
+ * @returns {Promise<Array>} Array of enrollment objects with student populated.
+ */
+
 export const getEnrollments = async (onModel, itemId) => {
   try {
     await dbConnect();

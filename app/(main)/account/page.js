@@ -1,5 +1,5 @@
 import FollowStats from "@/components/follow/FollowStats";
-import { getEnrolledItems } from "@/database/queries/enrollments-data";
+import { getEnrollmentStats } from "@/database/queries/enrollments-data";
 import { getCurrentUserWithFollowStats } from "@/lib/current-user";
 import Image from "next/image";
 
@@ -10,10 +10,9 @@ const AccountPage = async () => {
     ? user?.firstName + " " + user?.lastName
     : user?.name;
 
-  const [enrolledBooks, enrolledSeries] = await Promise.all([
-    getEnrolledItems(user?.id, "Book"),
-    getEnrolledItems(user?.id, "StudySeries"),
-  ]);
+  const { enrolledBooksCount, enrolledSeriesCount } = await getEnrollmentStats(
+    user?.id,
+  );
 
   return (
     <div className="container mx-auto p-4">
@@ -63,11 +62,11 @@ const AccountPage = async () => {
       <section className="space-y-3">
         <div className=" p-3 rounded-lg flex justify-between items-center">
           <span className="font-medium">Total Enrolled Books</span>
-          <span className="text-lg font-bold">{enrolledBooks.length}</span>
+          <span className="text-lg font-bold">{enrolledBooksCount}</span>
         </div>
         <div className=" p-3 rounded-lg flex justify-between items-center">
           <span className="font-medium">Total Enrolled Series</span>
-          <span className="text-lg font-bold">{enrolledSeries.length}</span>
+          <span className="text-lg font-bold">{enrolledSeriesCount}</span>
         </div>
       </section>
     </div>
