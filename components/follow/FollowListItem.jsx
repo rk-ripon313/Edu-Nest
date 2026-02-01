@@ -4,17 +4,19 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 
-const FollowListItem = ({ user, type }) => {
+const FollowListItem = ({ user, type, onUnfollow }) => {
   const name = user?.firstName
     ? user?.firstName + " " + user?.lastName
     : user?.name;
+
   const unFollow = async () => {
     const res = await toggleFollow({ educatorUserName: user?.userName });
 
     if (!res.success) {
       toast.error(res.message || "Failed to unfollow user");
     } else {
-      toast.success("Unfollowed user successfully");
+      toast.success("Unfollowed user");
+      onUnfollow?.(user._id.toString());
     }
   };
 
@@ -45,7 +47,11 @@ const FollowListItem = ({ user, type }) => {
             size="sm"
             variant="outline"
             className="h-7 px-3 text-xs"
-            onClick={unFollow}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              unFollow();
+            }}
           >
             Unfollow
           </Button>
