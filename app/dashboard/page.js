@@ -1,5 +1,7 @@
+import FollowStats from "@/components/follow/FollowStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEducatorDashboardData } from "@/database/queries/dashboard-data";
+import { getCurrentUserWithFollowStats } from "@/lib/current-user";
 import { formatDate } from "@/lib/formetData";
 import { formatPrice } from "@/lib/formetPrice";
 import {
@@ -16,8 +18,9 @@ import {
 import Link from "next/link";
 
 const DashboardHome = async () => {
-  const { stats, recentEnrollments, recentReviews } =
-    await getEducatorDashboardData();
+  const [{ stats, recentEnrollments, recentReviews }, user] = await Promise.all(
+    [getEducatorDashboardData(), getCurrentUserWithFollowStats()],
+  );
 
   // console.log({ stats, recentEnrollments, recentReviews });
   return (
@@ -70,6 +73,23 @@ const DashboardHome = async () => {
               {formatPrice(stats.totalRevenue - stats.totalWithdrawn)}
             </div>
           </StatsCard>
+        </div>
+      </section>
+
+      {/* Social Engagement */}
+      <section>
+        <h2 className="text-lg font-semibold mb-3">Social Engagement</h2>
+        <div className="flex items-center justify-between rounded-lg border border-muted bg-muted/30 px-4 py-3">
+          <div>
+            <h3 className="text-sm font-semibold">Community</h3>
+            <p className="text-xs text-muted-foreground">
+              Your audience growth
+            </p>
+          </div>
+          <FollowStats
+            followers={user.followers ?? []}
+            following={user.following ?? []}
+          />
         </div>
       </section>
 
