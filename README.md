@@ -240,4 +240,6 @@ This project helped me gain hands-on experience with:
 Frontend Developer  
 Focused on building **scalable, production-ready web applications**
 
-🔗 GitHub: https://github.com/rk-ripon360
+🔗 GitHub: [rk-ripon313](https://github.com/rk-ripon313)  
+🔗 LinkedIn: [rk-ripon313](https://www.linkedin.com/in/rk-ripon313)  
+🔗 Portfolio: [rk-ripon313.vercel.app](https://rk-ripon313.vercel.app/)
