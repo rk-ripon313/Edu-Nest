@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/session";
+import { redirect } from "next/navigation";
 import EducatorForm from "../components/EducatorForm";
 
 const BecomeEducatorPage = async () => {

@@ -17,7 +17,7 @@ const TopRatedSeries = dynamic(
   () => import("@/components/home/TopRatedSeries"),
   {
     suspense: true,
-  }
+  },
 );
 
 const MainPage = () => {
