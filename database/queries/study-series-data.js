@@ -5,20 +5,33 @@ import {
   replaceMongoIdInArray,
   replaceMongoIdInObject,
 } from "@/lib/transformId";
-import { CategoryModel } from "@/models/category-model";
 import { ChapterModel } from "@/models/chapter-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { LessonModel } from "@/models/lesson-model";
 import { ReportModel } from "@/models/repport-model";
 import { StudySeriesModel } from "@/models/StudySeries-model";
 import { TestimonialModel } from "@/models/testimonial-model";
-import { UserModel } from "@/models/user-model";
 import { WatchModel } from "@/models/watch-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 import { createAReport } from "./reports-data";
 
-// Uses MongoDB $facet for single query fetching paginated data + total count --- All series
+/**
+ * Get all published study series with optional filters for search, category, price range, and pagination. Each study series is enriched with additional data like enrollment count, rating count, average rating, and populated category and educator details.
+ * @param {Object} options - The filter and pagination options
+ * @param {string} options.search - Search term to match against study series slug and tags
+ * @param {string} options.sort - Sort option (e.g., "newest", "oldest", "priceAsc", "priceDesc")
+ * @param {string} options.label - Category label filter
+ * @param {string} options.group - Category group filter
+ * @param {string} options.subject - Category subject filter
+ * @param {string} options.part - Category part filter
+ * @param {number} options.minPrice - Minimum price filter
+ * @param {number} options.maxPrice - Maximum price filter
+ * @param {number} options.page - Page number for pagination (default: 1)
+ * @param {number} options.itemsPerPage - Number of items per page for pagination (default: 9)
+ * @returns {Promise<Object>} - An object containing the array of enriched study series and the total count of matching study series
+ */
+
 export const getStudySeries = async ({
   search,
   sort,
@@ -133,7 +146,12 @@ export const getStudySeries = async ({
   }
 };
 
-//here is a series dedails with all  populate data...
+/**
+ * Get a single study series by ID with enriched data like enrollment count, rating count, average rating, and populated category  , educator details , chapter list lesson  .
+ * @param {string} id - The ID of the study series to retrieve
+ * @returns {Promise<Object|null>} - study series object with chapters and lessons with enriched data or null if not found/unpublished
+ */
+
 export const getStudySeriesById = async (id) => {
   if (!id) return;
 
@@ -141,16 +159,8 @@ export const getStudySeriesById = async (id) => {
     await dbConnect();
 
     const series = await StudySeriesModel.findById(id)
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName image userName name followers",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName image userName name followers")
       .populate({
         path: "chapters",
         model: ChapterModel,
@@ -177,7 +187,13 @@ export const getStudySeriesById = async (id) => {
   }
 };
 
-//get related series --
+/**
+ * Get related study series based on shared tags, excluding the current study series
+ * @param {Array} tags - array of tags to match
+ * @param {string} currentId - ID of the current study series to exclude from results
+ * @param {number} limit - number of related study series to return (default: 12)
+ * @returns {Promise<Array>} - array of related study series with enriched data like enrollment count, rating count, average rating
+ */
 
 export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
   try {
@@ -189,18 +205,10 @@ export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
       isPublished: true,
     })
       .select(
-        "title category thumbnail educator price createdAt updatedAt chapters"
+        "title category thumbnail educator price createdAt updatedAt chapters",
       )
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName image userName name ")
       .limit(limit)
       .lean();
 
@@ -213,7 +221,12 @@ export const getRelatedStudySeries = async (tags, currentId, limit = 12) => {
   }
 };
 
-// type: "enroll" | "rating",
+/**  * Get books by type: most enrolled or top-rated
+ * @param {string} type - "enroll" for most enrolled study series, "rating" for top-rated study series
+ * @param {number} limit - number of study series to return (default: 12)
+ * @returns {Promise<Array>} - array of study series with enriched data like enrollment count, rating count, average rating
+ */
+
 export const getStudySeriesByType = async (type, limit = 12) => {
   try {
     await dbConnect();
@@ -240,35 +253,42 @@ export const getStudySeriesByType = async (type, limit = 12) => {
           $group: {
             _id: "$content",
             avgRating: { $avg: "$rating" },
+            ratingCount: { $sum: 1 },
           },
         },
-        { $sort: { avgRating: -1 } },
+        //minimum review condition
+        { $match: { ratingCount: { $gte: 3 } } },
+        { $sort: { avgRating: -1, ratingCount: -1 } },
         { $limit: limit },
       ]);
     }
 
     const seriesIds = selectedSeries.map((b) => b._id);
 
+    // order map
+    const orderMap = new Map(
+      selectedSeries.map((b, index) => [b._id.toString(), index]),
+    );
+
     const series = await StudySeriesModel.find({
       _id: { $in: seriesIds },
       isPublished: true,
     })
       .select(
-        "title category thumbnail educator price chapters createdAt updatedAt"
+        "title category thumbnail educator price chapters createdAt updatedAt",
       )
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName")
       .lean();
 
-    const enriched = await enrichItemsData(series, "StudySeries");
+    //  preserve order
+    const sortedSeries = series.sort(
+      (a, b) => orderMap.get(a._id.toString()) - orderMap.get(b._id.toString()),
+    );
+
+    //  Other Importents data added by enrichBooks fun.
+    const enriched = await enrichItemsData(sortedSeries, "StudySeries");
+
     return replaceMongoIdInArray(enriched);
   } catch (error) {
     console.error("getStudySeriesByType error:", error);
@@ -276,7 +296,12 @@ export const getStudySeriesByType = async (type, limit = 12) => {
   }
 };
 
-//study series data with progress
+/**
+ * Get a study series by ID for play page, including chapter and lesson details, and inject completed status based on the student's report.
+ * @param {string} id - The ID of the study series to retrieve for play
+ * @returns {Promise<Object|null>} - study series object with chapters and lessons with completed status or null if not found/unpublished
+ */
+
 export const getStudySeriesForPlay = async (id) => {
   if (!id) return null;
 

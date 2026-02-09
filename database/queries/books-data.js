@@ -4,16 +4,28 @@ import {
   replaceMongoIdInObject,
 } from "@/lib/transformId";
 import { BookModel } from "@/models/book-model";
-import { CategoryModel } from "@/models/category-model";
 import { EnrollmentModel } from "@/models/enrollment-model";
 import { TestimonialModel } from "@/models/testimonial-model";
-import { UserModel } from "@/models/user-model";
 import { dbConnect } from "@/service/mongo";
 import mongoose from "mongoose";
 
 import { getMongoSortStage } from "@/lib/applySort";
 
-// Uses MongoDB $facet for single query fetching paginated data + total count ---All Books
+/**
+ * Get all published books with optional filters for search, category, price range, and pagination. Each book is enriched with additional data like enrollment count, rating count, average rating, and populated category and educator details.
+ * @param {Object} options - The filter and pagination options
+ * @param {string} options.search - Search term to match against book slug and tags
+ * @param {string} options.sort - Sort option (e.g., "newest", "oldest", "priceAsc", "priceDesc")
+ * @param {string} options.label - Category label filter
+ * @param {string} options.group - Category group filter
+ * @param {string} options.subject - Category subject filter
+ * @param {string} options.part - Category part filter
+ * @param {number} options.minPrice - Minimum price filter
+ * @param {number} options.maxPrice - Maximum price filter
+ * @param {number} options.page - Page number for pagination (default: 1)
+ * @param {number} options.itemsPerPage - Number of items per page for pagination (default: 9)
+ * @returns {Promise<Object>} - An object containing the array of enriched books and the total count of matching books
+ */
 export const getAllBooks = async ({
   search,
   sort,
@@ -125,7 +137,12 @@ export const getAllBooks = async ({
   }
 };
 
-//here is a books dedails with all  populate data...
+/**
+ * Get a single book by ID with enriched data like enrollment count, rating count, average rating, and populated category and educator details.
+ * @param {string} id - The ID of the book to retrieve
+ * @returns {Promise<Object|null>} - The enriched book object or null if not found/unpublished
+ */
+
 export const getBookById = async (id) => {
   if (!id) return;
 
@@ -133,16 +150,8 @@ export const getBookById = async (id) => {
     await dbConnect();
 
     const book = await BookModel.findById(id)
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName image userName name followers",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName image userName name followers")
       .lean();
 
     if (!book || !book?.isPublished) return;
@@ -155,7 +164,13 @@ export const getBookById = async (id) => {
   }
 };
 
-//get related books --
+/**
+ * Get related books based on shared tags, excluding the current book
+ * @param {Array} tags - array of tags to match
+ * @param {string} currentId - ID of the current book to exclude from results
+ * @param {number} limit - number of related books to return (default: 12)
+ * @returns {Promise<Array>} - array of related books with enriched data like enrollment count, rating count, average rating
+ */
 
 export const getRelatedBooks = async (tags, currentId, limit = 12) => {
   try {
@@ -167,16 +182,8 @@ export const getRelatedBooks = async (tags, currentId, limit = 12) => {
       isPublished: true,
     })
       .select("title category thumbnail educator price createdAt updatedAt")
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName name image userName role")
       .limit(limit)
       .lean();
 
@@ -189,7 +196,13 @@ export const getRelatedBooks = async (tags, currentId, limit = 12) => {
   }
 };
 
-//for populer top-rated books type: "enroll" | "rating",
+/**
+ * Get books by type: most enrolled or top-rated
+ * @param {string} type - "enroll" for most enrolled books, "rating" for top-rated books
+ * @param {number} limit - number of books to return (default: 12)
+ * @returns {Promise<Array>} - array of books with enriched data like enrollment count, rating count, average rating
+ */
+
 export const getBooksByType = async (type, limit = 12) => {
   try {
     dbConnect();
@@ -214,34 +227,40 @@ export const getBooksByType = async (type, limit = 12) => {
           $group: {
             _id: "$content",
             avgRating: { $avg: "$rating" },
+            ratingCount: { $sum: 1 },
           },
         },
-        { $sort: { avgRating: -1 } },
+        //minimum review condition
+        { $match: { ratingCount: { $gte: 3 } } },
+        { $sort: { avgRating: -1, ratingCount: -1 } },
         { $limit: limit },
       ]);
     }
 
     const bookIds = selectedBooks.map((b) => b._id);
 
+    // order map
+    const orderMap = new Map(
+      selectedBooks.map((b, index) => [b._id.toString(), index]),
+    );
+
     const books = await BookModel.find({
       _id: { $in: bookIds },
       isPublished: true,
     })
       .select("title category thumbnail educator price createdAt updatedAt")
-      .populate({
-        path: "category",
-        model: CategoryModel,
-        select: "label group subject part",
-      })
-      .populate({
-        path: "educator",
-        model: UserModel,
-        select: "firstName lastName ",
-      })
+      .populate("category", "label group subject part")
+      .populate("educator", "firstName lastName name image userName role")
       .lean();
 
+    //  preserve order
+    const sortedBooks = books.sort(
+      (a, b) => orderMap.get(a._id.toString()) - orderMap.get(b._id.toString()),
+    );
+
     //  Other Importents data added by enrichBooks fun.
-    const enrichedBooks = await enrichItemsData(books, "Book");
+    const enrichedBooks = await enrichItemsData(sortedBooks, "Book");
+
     return replaceMongoIdInArray(enrichedBooks);
   } catch (error) {
     console.error("getStudySeriesByType error:", error);
