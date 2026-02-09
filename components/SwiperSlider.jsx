@@ -1,5 +1,6 @@
 "use client";
 
+import EducatorCard from "@/app/(main)/educators/components/EducatorCard";
 import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/navigation";
@@ -7,6 +8,7 @@ import { FreeMode, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Empty from "./Empty";
 import ItemCard from "./ItemCard";
+import MiniBlogCard from "./home/MiniBlogCard";
 
 const SwiperSlider = ({ items = [], type }) => {
   if (items.length === 0) {
@@ -27,12 +29,18 @@ const SwiperSlider = ({ items = [], type }) => {
           nextEl: ".swiper-button-next",
           prevEl: ".swiper-button-prev",
         }}
-        loop={true}
+        // loop={true}
         className="!py-2 !px-2 dark:bg-slate-800 bg-gray-300 rounded-xl"
       >
         {items.map((item) => (
           <SwiperSlide key={item.id} className="!w-64">
-            <ItemCard item={item} type={type} />
+            {type === "educator" ? (
+              <EducatorCard educator={item} />
+            ) : type === "blog" ? (
+              <MiniBlogCard blog={item} />
+            ) : (
+              <ItemCard item={item} type={type} />
+            )}
           </SwiperSlide>
         ))}
       </Swiper>
