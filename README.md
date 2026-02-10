@@ -3,7 +3,7 @@
 ![EduNest Home](./screenshots/home.png)
 
 🔗 **Live:** https://edu-nest-edu.vercel.app  
-💻 **Repository:** https://github.com/rk-ripon360/Edu-Nest
+💻 **Repository:** https://github.com/rk-ripon313/Edu-Nest
 
 **EduNest** is a production-ready **Learning Management System (LMS)** where students can purchase and consume digital books and video courses, and educators can publish, manage, and monetize educational content through a role-based dashboard.
 
@@ -27,15 +27,15 @@ This makes EduNest a **portfolio project with real product depth**.
 
 ## 🚀 Core Features
 
-### 📚 Student Learning Experience
+### 📚 Student Experience
 
-- Purchase **Books & Video Series** using **Stripe Checkout**
-- Secure **PDF Reader** for purchased books only
-- Video lessons with:
+- Purchase **Books & Video Series** via **Stripe Checkout**
+- Secure **PDF reader** for purchased books only
+- Secure **Video lessons** with:
   - Resume playback
   - Per-user progress tracking
   - Completion indicators
-- Centralized **My Learning** dashboard
+- Centralized **My Learning** dashboard for all enrolled content
 
 ---
 
@@ -49,7 +49,7 @@ Educators manage all learning content from a dedicated, role-protected dashboard
   - 📘 Digital Books (PDF + cover image)
   - 🎥 Video Series → Chapters → Lessons
   - 📝 Blogs
-- Drag & drop lesson reordering
+- Drag & drop chapter and lesson reordering
 - Publish / unpublish controls
 - Secure, role-based route protection
 
@@ -70,7 +70,18 @@ Educators manage all learning content from a dedicated, role-protected dashboard
 - Public blog listing & single blog pages
 - Like, comment, and share functionality
 - Educator-only blog publishing
-- **Intercepting Routes** for smooth navigation without context loss
+- Intercepting Routes for smooth navigation without context loss
+- Built to support long-form educational content and community engagement
+
+---
+
+### 📧 Transactional Emails
+
+- Automated transactional emails using **Resend**
+- Email notifications sent to:
+  - Students after successful purchase
+  - Educators on new enrollments
+- Emails triggered server-side after Stripe payment verification
 
 ---
 
@@ -85,13 +96,16 @@ Educators manage all learning content from a dedicated, role-protected dashboard
 
 ### Data Modeling
 
-- MongoDB with **Mongoose ODM**
-- Relational data structure:
-  - Users
-  - Books
-  - Series → Chapters → Lessons
-  - Enrollments
-  - Reviews & Ratings
+- **MongoDB** with **Mongoose ODM**
+- Well-structured relational schema covering:
+  - Users & Educator profiles
+  - Books & Study Series (Chapters → Lessons)
+  - Enrollments & Payments
+  - Reviews, Ratings & Testimonials
+  - Blogs, Comments & Replies
+  - Learning progress tracking (Watch history & Reports)
+
+> The schema is designed to support **scalable content publishing**, **social engagement**, and **learning progress tracking**, similar to real-world EdTech platforms.
 
 ### Payments & Content Protection
 
@@ -100,13 +114,6 @@ Educators manage all learning content from a dedicated, role-protected dashboard
   - PDF access
   - Video playback
 - No client-side trust for protected resources
-
-### Application Architecture
-
-- **Next.js App Router** for scalable routing
-- Server Actions for mutations & security
-- Modular, reusable UI components
-- Centralized permission logic
 
 ---
 
@@ -128,40 +135,23 @@ Educators manage all learning content from a dedicated, role-protected dashboard
 
 ## 🧱 Tech Stack
 
-### Frontend
-
-- Next.js 14 (App Router)
-- React 18
-- JavaScript
-- Tailwind CSS + ShadCN UI
-- Radix UI
-- Framer Motion
-
-### Backend
-
-- Next.js Server Actions
-- MongoDB + Mongoose
-- NextAuth v5 (JWT sessions)
-
-### Payments & Media
-
-- Stripe
-- Cloudinary
-- React Player
-- React PDF
+- **Frontend:** Next.js 14, React 18, Tailwind CSS, ShadCN UI, Radix UI, Framer Motion
+- **Backend:** Next.js Server Actions, MongoDB + Mongoose, NextAuth v5
+- **Payments & Media:** Stripe, Cloudinary, Resend, React Player, React PDF
 
 ---
 
 ## 📦 Key Libraries
 
 | Category        | Library                                   |
-| :-------------- | :---------------------------------------- |
+| --------------- | ----------------------------------------- |
 | **Auth**        | `next-auth@beta`                          |
 | **Database**    | `mongoose`                                |
-| **Media**       | `cloudinary`, `react-player`, `react-pdf` |
 | **Payments**    | `stripe`, `@stripe/stripe-js`             |
+| **Email**       | `resend`                                  |
+| **Media**       | `cloudinary`, `react-player`, `react-pdf` |
 | **Forms**       | `react-hook-form`, `zod`                  |
-| **UI**          | `@radix-ui/\*`, `shadcn/ui`               |
+| **UI**          | `@radix-ui/*`, `shadcn/ui`                |
 | **Animation**   | `framer-motion`, `tailwindcss-animate`    |
 | **Drag & Drop** | `@hello-pangea/dnd`                       |
 
@@ -190,7 +180,7 @@ Educators manage all learning content from a dedicated, role-protected dashboard
 - `/account/profile` – Profile management
 - `/account/enrolled-books` – Purchased books
 - `/account/enrolled-study-series` – Enrolled video series
-- `/account/beacome-educator` – Educator application
+- `/account/become-educator` – Educator application
 - `/account/password` – Password change
 <!-- -->
 - `/enroll-success` - Post-purchase success page
@@ -233,6 +223,37 @@ This project helped me gain hands-on experience with:
 - Mobile application version
 
 ---
+
+## 🔐 Environment Variables
+
+```env
+# Auth
+AUTH_SECRET =
+CUSTOM_JWT_SECRET=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REFRESH_TOKEN=
+
+# Database
+MONGODB_URI=
+
+# Payments
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+
+# Email
+RESEND_API_KEY=
+
+# Media
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_VIDEO=
+NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY=
+```
 
 ## 👨‍💻 Author
 
