@@ -1,5 +1,4 @@
-import "./globals.css";
-
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { ThemeProvider } from "next-themes";
 import { Manrope, Sora, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
@@ -37,6 +36,8 @@ export default function RootLayout({ children }) {
           {children}
           <Toaster richColors position="top-center" />
         </ThemeProvider>
+
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
       </body>
     </html>
   );
