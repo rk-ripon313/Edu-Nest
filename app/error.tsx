@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect } from "react";
 
-const GlobalError = ({ error, reset }) => {
+interface GlobalErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+}
+
+const GlobalError = ({ error, reset }: GlobalErrorProps) => {
   useEffect(() => {
     console.error("App Error:", error);
   }, [error]);
@@ -14,6 +19,7 @@ const GlobalError = ({ error, reset }) => {
       <h1 className="text-4xl font-bold text-destructive mb-4">
         Something went wrong
       </h1>
+
       <p className="text-muted-foreground mb-6">
         An unexpected error occurred. Please try again or go back home.
       </p>
@@ -22,6 +28,7 @@ const GlobalError = ({ error, reset }) => {
         <Button variant="default" onClick={() => reset()}>
           Try Again
         </Button>
+
         <Link href="/">
           <Button variant="outline">Go Home</Button>
         </Link>
@@ -29,4 +36,5 @@ const GlobalError = ({ error, reset }) => {
     </div>
   );
 };
+
 export default GlobalError;

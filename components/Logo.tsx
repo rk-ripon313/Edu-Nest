@@ -2,12 +2,13 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
-const Logo = ({ className = "" }) => {
+interface LogoProps {
+  className?: string;
+}
+
+const Logo = ({ className = "" }: LogoProps) => {
   return (
-    <Link
-      href="/"
-      className={cn("relative  min-w-[120px] h-[70px]", className)}
-    >
+    <Link href="/" className={cn("relative min-w-[120px] h-[70px]", className)}>
       <Image
         src="/logo.png"
         alt="logo"
@@ -18,4 +19,5 @@ const Logo = ({ className = "" }) => {
     </Link>
   );
 };
+
 export default Logo;
