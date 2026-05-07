@@ -6,7 +6,7 @@ export interface Testimonial {
   student: Types.ObjectId;
 
   content: Types.ObjectId;
-  contentModel: "Book" | "StudySeries";
+  onModel: "Book" | "StudySeries";
 
   rating: number;
   comment?: string;
