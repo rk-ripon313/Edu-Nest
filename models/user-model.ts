@@ -1,12 +1,13 @@
+import { User } from "@/types/user";
 import { Schema, model, models } from "mongoose";
 
-const userSchema = new Schema(
+const userSchema = new Schema<User>(
   {
-    firstName: { required: true, type: String },
-    lastName: { required: true, type: String },
-    email: { required: true, type: String, unique: true },
-    userName: { required: false, type: String },
-    password: { required: true, type: String },
+    firstName: { type: String },
+    lastName: { type: String },
+    email: { type: String, required: true, unique: true },
+    userName: { type: String },
+    password: { type: String },
     image: { type: String },
     role: {
       type: String,
@@ -19,7 +20,7 @@ const userSchema = new Schema(
     //  Educator profile
     educatorProfile: {
       bio: { type: String },
-      expertise: [{ type: String }],
+      expertise: { type: [String], default: [] },
       qualification: { type: String },
       socialLinks: {
         facebook: { type: String },
@@ -32,7 +33,7 @@ const userSchema = new Schema(
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const UserModel = models.User || model("User", userSchema);
+export const UserModel = models.User || model<User>("User", userSchema);

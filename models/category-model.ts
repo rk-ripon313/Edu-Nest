@@ -1,9 +1,12 @@
+import { Category } from "@/types/category";
 import { Schema, model, models } from "mongoose";
 
-const CategorySchema = new Schema(
+const CategorySchema = new Schema<Category>(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
+    thumbnail: { type: String },
+
     label: {
       type: String,
       enum: ["SSC", "HSC", "Admission", "Others"],
@@ -23,13 +26,12 @@ const CategorySchema = new Schema(
       required: true,
     },
     subject: { type: String, required: true },
-    part: { type: String, enum: ["1st", "2nd"], required: false },
-    thumbnail: { type: String, required: false },
+    part: { type: String, enum: ["1st", "2nd"] },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const CategoryModel =
-  models.Category || model("Category", CategorySchema);
+  models.Category || model<Category>("Category", CategorySchema);

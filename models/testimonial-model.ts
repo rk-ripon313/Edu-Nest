@@ -1,5 +1,6 @@
+import { Testimonial } from "@/types/testimonial";
 import { Schema, model, models } from "mongoose";
-const TestimonialSchema = new Schema(
+const TestimonialSchema = new Schema<Testimonial>(
   {
     student: { type: Schema.Types.ObjectId, ref: "User", required: true },
     content: {
@@ -7,13 +8,14 @@ const TestimonialSchema = new Schema(
       refPath: "onModel",
       required: true,
     },
-    onModel: { type: String, required: true, enum: ["Book", "StudySeries"] },
+    onModel: { type: String, required: true, enum: ["Book", "StudySeries"] }, //better naming -> contentModel
+
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String },
   },
   {
     timestamps: true,
-  }
+  },
 );
 export const TestimonialModel =
-  models.Testimonial || model("Testimonial", TestimonialSchema);
+  models.Testimonial || model<Testimonial>("Testimonial", TestimonialSchema);
