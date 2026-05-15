@@ -1,11 +1,11 @@
-# 🎓 EduNest — Full Stack EdTech Learning Platform
+# 🎓 EduNest — Modern EdTech & Learning Community Platform
 
 🔗 **Live:** https://edu-nest-edu.vercel.app  
 💻 **Repository:** https://github.com/rk-ripon313/Edu-Nest
 
-EduNest is a modern **Full-Stack EdTech Learning Platform** where students can purchase digital books and video learning series, while educators can publish and manage educational content through a role-based dashboard.
+EduNest is a modern EdTech and learning community platform where students can purchase digital books and video learning series, while educators can publish educational content, build audiences, and manage learning experiences through a role-based dashboard.
 
-The platform combines **content publishing, digital learning, payments, and community features** in one system.
+The platform combines digital learning, content publishing, payments, and social community features into a unified ecosystem.
 
 ---
 
