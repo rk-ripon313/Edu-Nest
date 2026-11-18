@@ -46,13 +46,14 @@ export const getEnrollmentStats = async (userId) => {
  * @param {Object} options - Optional search and sort options.
  * @param {string} [options.search] - Search keyword for item title.
  * @param {"latest" | "oldest" | "price-low" | "price-high"} [options.sort="latest"] - Sorting method.
+ *  * @param {number} [options.limit] - Maximum number of items to return.
  * @returns {Promise<Array>} Array of enrolled items.
  */
 
 export const getEnrolledItems = async (
   userId,
   model,
-  { search = "", sort = "latest" } = {},
+  { search = "", sort = "latest", limit = 0 } = {},
 ) => {
   if (model === "Book") {
     await import("@/models/book-model");
@@ -78,6 +79,7 @@ export const getEnrolledItems = async (
             ? { createdAt: 1 }
             : {},
       )
+      .limit(limit)
       .populate({
         path: "content",
         match: {
